@@ -3,7 +3,7 @@
 #include <Wire.h>
 #include <MIDI.h>
 #include <Bounce.h>
-#include<math.h>
+#include <math.h>
 #include "Adafruit_Trellis.h"
 #define NUMTRELLIS 8				// **** SET # OF TRELLISES HERE
 #define numKeys (NUMTRELLIS * 16)
@@ -29,73 +29,73 @@ bool setPattern1 = LOW;				//View: to which 1-8 row should the pattern be set?
 bool setPattern2 = LOW;				//View: choose the pattern
 byte patternEdit1;					//The row for which the pattern is to be set
 byte patternEdit2;					//The choosen pattern
-byte setMuteSolo;					//View: set left mute and right solo
-bool muteSoloRow[16][8][2];			//The rows (16 Channels & 8 rows). [x][x][0]->Mute and [x][x][1]->Solo
-byte muteSoloRowEdit;				//The row for which the mute/solo is to be set
-byte muteOrSoloEdit;				//For [x][x][FALSE]->Mute and [x][x][TRUE]->Solo
-bool autoMuteRow[16][8];			//If one row is soloed, the others are muted here. 
-byte countSolos = 0;				//The number of solos is counted here so that, for example, all solos are removed when the last row is soloed.
+byte setMute;						//View: set left mute and right solo
+bool mute[8][16];
 bool noteTriplet[16];
+const byte tripletStep[2] = {15,11};
 byte startBlinkSleep = 200;
 byte beatClockCounter = 0;
 byte steps[16];
 const byte pinPlay = 23;
-Bounce bouncePlay = Bounce(pinPlay, 100);
+Bounce bouncePlay = Bounce(pinPlay, 300);
 const byte pinFunction = 12;
-Bounce bounceFunction = Bounce(pinFunction, 100);
+Bounce bounceFunction = Bounce(pinFunction, 300);
 byte eightRows;
 byte pagePlay[16];
 byte pageView[16];
-bool pageActive[16][16];
+EXTMEM bool pageActive[16][256];
 byte pageNext;
 byte pagePre;
 byte pageFirst;
 byte pageLast;
-byte pageChange[16][16] = {{1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,0},
-							   {2,3,4,5,6,7,8,9,10,11,12,13,14,15,0,1},
-							   {3,4,5,6,7,8,9,10,11,12,13,14,15,0,1,2},
-							   {4,5,6,7,8,9,10,11,12,13,14,15,0,1,2,3},
-							   {5,6,7,8,9,10,11,12,13,14,15,0,1,2,3,4},
-							   {6,7,8,9,10,11,12,13,14,15,0,1,2,3,4,5},
-							   {7,8,9,10,11,12,13,14,15,0,1,2,3,4,5,6},
-							   {8,9,10,11,12,13,14,15,0,1,2,3,4,5,6,7},
-							   {9,10,11,12,13,14,15,0,1,2,3,4,5,6,7,8},
-							   {10,11,12,13,14,15,0,1,2,3,4,5,6,7,8,9},
-							   {11,12,13,14,15,0,1,2,3,4,5,6,7,8,9,10},
-							   {12,13,14,15,0,1,2,3,4,5,6,7,8,9,10,11},
-							   {13,14,15,0,1,2,3,4,5,6,7,8,9,10,11,12},
-							   {14,15,0,1,2,3,4,5,6,7,8,9,10,11,12,13},
-							   {15,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14},
-							   {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15}};
+EXTMEM byte pageChange[256][256];
 byte channelView = 0;
 bool channelActive[16];
 byte channelPlay1;
 byte channelPlay2;
 bool longNotes[16];
-short channelCount = 5;
-short notePitch[16][16][8][16];
-byte noteEdit;
-bool notePitch81 = LOW;
-bool notePitch82 = LOW;
-bool notePitchAll1 = LOW;
-bool notePitchAll2 = LOW;
-bool noteVolume1 = LOW;
-bool noteVolume2 = LOW;
-short volumeValue[16][16][8][16];
+byte channelCount = 12;
+EXTMEM byte notePitch[16][256][8][16];
+byte pitchEdit;
+bool notePitch8a = LOW;
+bool notePitch8b = LOW;
+bool notePitch127a = LOW;
+bool notePitch127b = LOW;
+EXTMEM byte noteVolume[16][256][8][16];
 byte volumeEdit;
-bool volumeValue81 = LOW;
-bool volumeValue82 = LOW;
-bool volumeValueAll1 = LOW;
-bool volumeValueAll2 = LOW;
+bool noteVolume8a = LOW;
+bool noteVolume8b = LOW;
+bool noteVolume127a = LOW;
+bool noteVolume127b = LOW;
 bool volumeVolume1 = LOW;
 bool volumeVolume2 = LOW;
-byte noteEnd[16][16][8][16];
-byte noteStart[16][16][8][16];
-short startNotes[8] = {49,42,45,43,41,39,38,36};
-bool softwareMatrix[16][16][128];
-bool note[16][128];
+EXTMEM byte noteEnd[16][256][8][16];
+EXTMEM byte noteStart[16][256][8][16];
+byte startNotes[8] = {49,42,45,43,41,39,38,36};
+EXTMEM bool softwareMatrix[16][256][128];
 bool noteStop[16][128];
 bool noteStopFunction[16][128];
+EXTMEM bool noteOnTrigger[16][256][128];
+EXTMEM bool noteOffTrigger[16][256][128];
+EXTMEM bool noteOnOff[16][256][8][16];
+EXTMEM bool startNote[16][256][8];
+//bool setNoteOn = LOW;
+bool setNoteOff = LOW;
+bool setLongNotes = LOW;
+byte pageNextB;
+bool noteStart8a = LOW;
+bool noteStart127a = LOW;
+bool noteEnd8a = LOW;
+bool noteEnd127a = LOW;
+bool noteStart8b = LOW;
+bool noteStart127b = LOW;
+bool noteStartChannel = LOW;
+bool noteEnd8b = LOW;
+bool noteEnd127b = LOW;
+bool noteEndChannel = LOW;
+byte noteStartEdit;
+byte noteEndEdit;
+byte noteOnVolume[128];
 unsigned long trellisTime = 0;				 // letzter Zeitwert bei dem der Ausgangzustand wechselte.
 unsigned long trellisDebounce = 30;	 // Entprellzeit
 unsigned long clockTime = 0;
@@ -105,58 +105,60 @@ unsigned long usbDebounce = 1;
 byte usbTransfer[5];
 int BPM = 120;
 bool setBPM = LOW;
-int latency[16] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+unsigned int latency[16] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 int latencyPlay[16] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 byte latencyChannel[16] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 bool setLatency = LOW;
 bool setLatencyChannel = LOW;
 bool playLater[16][8];
 byte playLaterNotePitch[16][8];
-byte playLaterVolumeValue[16][8];
+byte playLaternoteVolume[16][8];
 unsigned long playLaterMillis[16][8];
 bool playLaterOff[16][8];
 byte playLaterOffNote[16][8];
 unsigned long playLaterOffMillis[16][8];
 byte noteLength[16];
 unsigned long makeClock1 = 0;
+unsigned long makeClock2 = 0;
 unsigned long clockCurrent;
-volatile float clockIntervall;
+float clockIntervall = 60.0/BPM*1000*1000/24.0;
+unsigned long clockCounter = 0;
 byte clock2[16];
 bool clockStart = LOW;
 bool isClock = LOW;
 bool isPlay = LOW;
 bool isInternal = HIGH;
-byte funtionMatrix1[128] = { 0, 1, 2, 3,16,17,18,19, 32, 33, 34, 35,112,113,114,115,
-							 4, 5, 6 ,7,20,21,22,23, 36, 37, 38, 39,116,117,118,119,
-							 8, 9,10,11,24,25,26,27, 40, 41, 42, 43,120,121,122,123,
-							12,13,14,15,28,29,30,31, 44, 45, 46, 47,124,125,126,127,
-							64,65,66,67,80,81,82,83, 96, 97, 98, 99, 48, 49, 50, 51,
-							68,69,70,71,84,85,86,87,100,101,102,103, 52, 53, 54, 55,
-							72,73,74,75,88,89,90,91,104,105,106,107, 56, 57, 58, 59,
-							76,77,78,79,92,93,94,95,108,109,110,111, 60, 61, 62, 63};
+const byte funtionMatrix1[128] = { 0, 1, 2, 3,16,17,18,19, 32, 33, 34, 35,112,113,114,115,
+								   4, 5, 6 ,7,20,21,22,23, 36, 37, 38, 39,116,117,118,119,
+								   8, 9,10,11,24,25,26,27, 40, 41, 42, 43,120,121,122,123,
+								  12,13,14,15,28,29,30,31, 44, 45, 46, 47,124,125,126,127,
+								  64,65,66,67,80,81,82,83, 96, 97, 98, 99, 48, 49, 50, 51,
+								  68,69,70,71,84,85,86,87,100,101,102,103, 52, 53, 54, 55,
+								  72,73,74,75,88,89,90,91,104,105,106,107, 56, 57, 58, 59,
+								  76,77,78,79,92,93,94,95,108,109,110,111, 60, 61, 62, 63};
 byte funtionMatrix2[128];
-byte hardwareMatrix[8][16] = {{ 0, 1, 2, 3,16,17,18,19, 32, 33, 34, 35,112,113,114,115},
-							  { 4, 5, 6 ,7,20,21,22,23, 36, 37, 38, 39,116,117,118,119},
-							  { 8, 9,10,11,24,25,26,27, 40, 41, 42, 43,120,121,122,123},
-							  {12,13,14,15,28,29,30,31, 44, 45, 46, 47,124,125,126,127},
-							  {64,65,66,67,80,81,82,83, 96, 97, 98, 99, 48, 49, 50, 51},
-							  {68,69,70,71,84,85,86,87,100,101,102,103, 52, 53, 54, 55},
-							  {72,73,74,75,88,89,90,91,104,105,106,107, 56, 57, 58, 59},
-							  {76,77,78,79,92,93,94,95,108,109,110,111, 60, 61, 62, 63}};
-bool copyPage1 = LOW;
-bool copyPageAnsicht[16];
+const byte hardwareMatrix[8][16] = {{ 0, 1, 2, 3,16,17,18,19, 32, 33, 34, 35,112,113,114,115},
+									{ 4, 5, 6 ,7,20,21,22,23, 36, 37, 38, 39,116,117,118,119},
+									{ 8, 9,10,11,24,25,26,27, 40, 41, 42, 43,120,121,122,123},
+									{12,13,14,15,28,29,30,31, 44, 45, 46, 47,124,125,126,127},
+									{64,65,66,67,80,81,82,83, 96, 97, 98, 99, 48, 49, 50, 51},
+									{68,69,70,71,84,85,86,87,100,101,102,103, 52, 53, 54, 55},
+									{72,73,74,75,88,89,90,91,104,105,106,107, 56, 57, 58, 59},
+									{76,77,78,79,92,93,94,95,108,109,110,111, 60, 61, 62, 63}};
+bool copyPage = LOW;
+bool copyPageView[256];
 bool copyPageChannel[16];
 byte liveLowerNote[16];
 bool playLive = LOW;
 bool playLiveTest = LOW;
-byte liveNotes[128] = { 50,50,50, 1,50, 3,50,50, 6,50, 8,50,10,50,50,50,
-						50,50, 0,50, 2,50, 4, 5,50, 7,50, 9,50,11,50,50,
-						50,50,50,13,50,15,50,50,18,50,20,50,22,50,50,50,
-						50,50,12,50,14,50,16,17,50,19,50,21,50,23,50,50,
-						50,50,50,25,50,27,50,50,30,50,32,50,34,50,50,50,
-						50,50,24,50,26,50,28,29,50,31,50,33,50,35,50,50,
-						50,50,50,37,50,39,50,50,42,50,44,50,46,50,50,50,
-						50,50,36,50,38,50,40,41,50,43,50,45,50,47,50,50};
+const byte liveNotes[128] = { 50,50,50,50,50, 1, 3,50, 6, 8,10,50,50,50,50,50,
+							  50,50,50,50, 0, 2, 4, 5, 7, 9,11,12,50,50,50,50,
+							  50,50,50,50,50,13,15,50,18,20,22,50,50,50,50,50,
+							  50,50,50,50,12,14,16,17,19,21,23,24,50,50,50,50,
+							  50,50,50,50,50,25,27,50,30,32,34,50,50,50,50,50,
+							  50,50,50,50,24,26,28,29,31,33,35,36,50,50,50,50,
+							  50,50,50,50,50,37,39,50,42,44,46,50,50,50,50,50,
+							  50,50,50,50,36,38,40,41,43,45,47,48,50,50,50,50};
 bool freeLiveNotes = HIGH;
 byte liveIsPressed[128];
 bool liveIsUnPressed[128];
@@ -164,11 +166,23 @@ byte MIDIByte;
 byte statusByte;
 byte dataByte1;
 byte dataByte2;
-FlexSerial MIDI1(-1, 9);
-FlexSerial MIDI2(-1, 11);
-FlexSerial MIDI3(-1, 6);
-FlexSerial MIDI4(-1, 8);
-FlexSerial MIDI5(-1, 10);
+bool monoStepRecord = LOW;
+byte stepRecordStep = 0;
+bool mooveIn = HIGH;
+bool mooveInChannel[16];
+int mooveInCounter[16];
+FlexSerial MIDI01(-1, 9);
+FlexSerial MIDI02(-1, 11);
+FlexSerial MIDI03(-1, 6);
+FlexSerial MIDI04(-1, 8);
+FlexSerial MIDI05(-1, 10);
+FlexSerial MIDI06(-1, 21);
+FlexSerial MIDI07(-1, 17);
+FlexSerial MIDI08(-1, 15);
+FlexSerial MIDI09(-1, 41);
+FlexSerial MIDI10(-1, 39);
+FlexSerial MIDI11(-1, 37);
+FlexSerial MIDI12(-1, 35);
 MIDI_CREATE_INSTANCE(HardwareSerial, Serial1, MIDIInput);
 //int led = 13;
 //bool ledcheck;
@@ -181,11 +195,18 @@ void setup(){
 	pinMode(pinPlay, INPUT_PULLUP);
 	MIDIInput.begin(MIDI_CHANNEL_OMNI);
 	//pinMode(led, OUTPUT);
-	MIDI1.begin(31250);
-	MIDI2.begin(31250);
-	MIDI3.begin(31250);
-	MIDI4.begin(31250);
-	MIDI5.begin(31250);
+	MIDI01.begin(31250);
+	MIDI02.begin(31250);
+	MIDI03.begin(31250);
+	MIDI04.begin(31250);
+	MIDI05.begin(31250);
+	MIDI06.begin(31250);
+	MIDI07.begin(31250);
+	MIDI08.begin(31250);
+	MIDI09.begin(31250);
+	MIDI10.begin(31250);
+	MIDI11.begin(31250);
+	MIDI12.begin(31250);
 	for (byte c=0; c<128; c++){
 		funtionMatrix2[funtionMatrix1[c]] = c;
 	}
@@ -194,7 +215,6 @@ void setup(){
 		for (byte x=0; x<16; x++){
 			noteStop[x][c] = LOW;
 			noteStopFunction[x][c] = LOW;
-			note[x][c] = LOW;
 			for (byte y=0; y<channelCount; y++){
 				softwareMatrix[y][x][c] = LOW;
 			}
@@ -207,20 +227,21 @@ void setup(){
 		longNotes[z] = LOW;
 		channelActive[z] = HIGH;
 		noteLength[z] = 12;
-		steps[z] = -1;
+		steps[z] = 15;
 		clock2[z] = 40;
 		noteTriplet[z] = LOW;
-		copyPageAnsicht[z] = LOW;
 		copyPageChannel[z] = LOW;
 		liveLowerNote[z] = 36;
+		mooveInChannel[z] = LOW;
+		pagePlay[z] = 255;
+		pageView[z] = 0;
 		for (byte c=0; c<8; c++){
-			for (byte x=0; x<2; x++){
-				muteSoloRow[z][c][x] = LOW;
-			}
-			for (byte x=0; x<16; x++){
+			mute[c][z] = LOW;
+			for (int x=0; x<256; x++){
+				startNote[z][x][c] = HIGH;
 				for (byte y=0; y<channelCount; y++){
 					notePitch[y][x][c][z] = startNotes[c];
-					volumeValue[y][x][c][z] = 100;
+					noteVolume[y][x][c][z] = 100;
 					noteEnd[y][x][c][z] = 1;
 					noteStart[y][x][c][z] = 0;
 					if (x == 0){
@@ -228,9 +249,22 @@ void setup(){
 					} else {
 						pageActive[y][x] = LOW;
 					}
-					pagePlay[x] = 0;
-					pageView[x] = 0;
 				}
+			}
+		}
+	}
+	for (int z=0; z<256; z++){
+		copyPageView[z] = LOW;
+		if (z + 1 == 256){
+			pageChange[0][z] = 0;
+		} else {
+			pageChange[0][z] = z + 1;
+		}
+		for (int c=1; c<256; c++){
+			if (pageChange[c-1][z] == 255){
+				pageChange[c][z] = 0;
+			} else {
+				pageChange[c][z] = pageChange[c-1][z] + 1;
 			}
 		}
 	}
@@ -288,97 +322,101 @@ void loop(){
 		if (trellis.readSwitches()){
 			for (byte z=0; z<numKeys; z++){
 				if (trellis.justPressed(z)){
-					if (function == LOW){ //Setze Step
+					if (function == LOW){ //Set Step
 						if (softwareMatrix[channelView][pageView[channelView]][z]==LOW){
 							softwareMatrix[channelView][pageView[channelView]][z] = HIGH;
+							noteOnTrigger[channelView][pageView[channelView]][z] = HIGH;
+							noteOffTrigger[channelView][pageView[channelView]][z] = HIGH;
 							trellis.setLED(z);
 							trellis.writeDisplay();
 						} else {
 							softwareMatrix[channelView][pageView[channelView]][z] = LOW;
+							noteOnTrigger[channelView][pageView[channelView]][z] = LOW;
+							noteOffTrigger[channelView][pageView[channelView]][z] = LOW;
 							trellis.clrLED(z);
 							trellis.writeDisplay();
 						}
-					} else if (notePitch81 == HIGH && (z == 0 || z == 4 || z == 8 || z == 12 || z == 64 || z == 68 || z == 72 || z == 76)){ //to which note should the value be changed
+					} else if (notePitch8a == HIGH && (z == 0 || z == 4 || z == 8 || z == 12 || z == 64 || z == 68 || z == 72 || z == 76)){ //to which note should the value be changed
 						for (byte c=0; c<128; c++){
 								trellis.clrLED(c);
 						}
 						switch (z) {
 							case 0:
-								noteEdit = 0;
+								pitchEdit = 0;
 								break;
 							case 4:
-								noteEdit = 1;
+								pitchEdit = 1;
 								break;
 							case 8:
-								noteEdit = 2;
+								pitchEdit = 2;
 								break;
 							case 12:
-								noteEdit = 3;
+								pitchEdit = 3;
 								break;
 							case 64:
-								noteEdit = 4;
+								pitchEdit = 4;
 								break;
 							case 68:
-								noteEdit = 5;
+								pitchEdit = 5;
 								break;
 							case 72:
-								noteEdit = 6;
+								pitchEdit = 6;
 								break;
 							case 76:
-								noteEdit = 7;
+								pitchEdit = 7;
 								break;
 						}
-						for (byte c=0; c<=notePitch[channelView][pageView[channelView]][noteEdit][0]; c++){
+						for (byte c=0; c<=notePitch[channelView][pageView[channelView]][pitchEdit][0]; c++){
 								trellis.setLED(funtionMatrix1[c]);
 						}
 						trellis.writeDisplay();
-						notePitch81 = LOW;
-						notePitch82 = HIGH;
-					} else if (notePitch82 == HIGH){ //change the notePitch
-						noteOffVoid(notePitch[channelView][pageView[channelView]][noteEdit][0],channelView);
-						for (byte c=pageView[channelView]; c<16; c++){
+						notePitch8a = LOW;
+						notePitch8b = HIGH;
+					} else if (notePitch8b == HIGH){ //change the notePitch
+						noteOffVoid(notePitch[channelView][pageView[channelView]][pitchEdit][0],channelView);
+						for (int c=pageView[channelView]; c<256; c++){
 							if (pageActive[channelView][c] == HIGH){
 								for (byte x=0; x<16; x++){
-										notePitch[channelView][c][noteEdit][x] = funtionMatrix2[z];
+										notePitch[channelView][c][pitchEdit][x] = funtionMatrix2[z];
 								}
 							}
 						}
-						noteOnVoid(notePitch[channelView][pageView[channelView]][noteEdit][0],volumeValue[channelView][pageView[channelView]][noteEdit][0],channelView);
-						noteStopFunction[channelView][notePitch[channelView][pageView[channelView]][noteEdit][0]] = HIGH;
+						noteOnVoid(notePitch[channelView][pageView[channelView]][pitchEdit][0],noteVolume[channelView][pageView[channelView]][pitchEdit][0],channelView);
+						noteStopFunction[channelView][notePitch[channelView][pageView[channelView]][pitchEdit][0]] = HIGH;
 						for (byte c=0; c<128; c++){
 									trellis.clrLED(c);
 						}
-						for (byte c=0; c<=notePitch[channelView][pageView[channelView]][noteEdit][0]; c++){
+						for (byte c=0; c<=notePitch[channelView][pageView[channelView]][pitchEdit][0]; c++){
 								trellis.setLED(funtionMatrix1[c]);
 						}
 						
 						trellis.writeDisplay();
 
-					} else if (notePitchAll1 == HIGH){ //to which note should the value be changed
+					} else if (notePitch127a == HIGH){ //to which note should the value be changed
 						for (byte c=0; c<128; c++){
 								trellis.clrLED(c);
 						}
-						noteEdit = funtionMatrix2[z];
-						for (byte c=0; c<=notePitch[channelView][pageView[channelView]][noteEdit/16][noteEdit%16]; c++){
+						pitchEdit = funtionMatrix2[z];
+						for (byte c=0; c<=notePitch[channelView][pageView[channelView]][pitchEdit/16][pitchEdit%16]; c++){
 								trellis.setLED(funtionMatrix1[c]);
 						}
 						trellis.writeDisplay();
-						notePitchAll1 = LOW;
-						notePitchAll2 = HIGH;
-					} else if (notePitchAll2 == HIGH){ //change the notePitch
-						noteOffVoid(notePitch[channelView][pageView[channelView]][noteEdit/16][noteEdit%16],channelView);
-						notePitch[channelView][pageView[channelView]][noteEdit/16][noteEdit%16] = funtionMatrix2[z];
-						noteOnVoid(notePitch[channelView][pageView[channelView]][noteEdit/16][noteEdit%16],volumeValue[channelView][pageView[channelView]][noteEdit/16][noteEdit%16],channelView);
-						noteStopFunction[channelView][notePitch[channelView][pageView[channelView]][noteEdit/16][noteEdit%16]] = HIGH;
+						notePitch127a = LOW;
+						notePitch127b = HIGH;
+					} else if (notePitch127b == HIGH){ //change the notePitch
+						noteOffVoid(notePitch[channelView][pageView[channelView]][pitchEdit/16][pitchEdit%16],channelView);
+						notePitch[channelView][pageView[channelView]][pitchEdit/16][pitchEdit%16] = funtionMatrix2[z];
+						noteOnVoid(notePitch[channelView][pageView[channelView]][pitchEdit/16][pitchEdit%16],noteVolume[channelView][pageView[channelView]][pitchEdit/16][pitchEdit%16],channelView);
+						noteStopFunction[channelView][notePitch[channelView][pageView[channelView]][pitchEdit/16][pitchEdit%16]] = HIGH;
 						for (byte c=0; c<128; c++){
 									trellis.clrLED(c);
 						}
-						for (byte c=0; c<=notePitch[channelView][pageView[channelView]][noteEdit/16][noteEdit%16]; c++){
+						for (byte c=0; c<=notePitch[channelView][pageView[channelView]][pitchEdit/16][pitchEdit%16]; c++){
 								trellis.setLED(funtionMatrix1[c]);
 						}
 						
 						trellis.writeDisplay();
-					} else if (volumeValue81 == HIGH && (z == 0 || z == 4 || z == 8 || z == 12 || z == 64 || z == 68 || z == 72 || z == 76)){ //to which note should the volume be changed
+					} else if (noteVolume8a == HIGH && (z == 0 || z == 4 || z == 8 || z == 12 || z == 64 || z == 68 || z == 72 || z == 76)){ //to which note should the volume be changed
 						for (byte c=0; c<128; c++){
 								trellis.clrLED(c);
 						}
@@ -408,51 +446,51 @@ void loop(){
 								volumeEdit = 7;
 								break;
 						}
-						for (byte c=0; c<=volumeValue[channelView][pageView[channelView]][volumeEdit][0]; c++){
+						for (byte c=0; c<=noteVolume[channelView][pageView[channelView]][volumeEdit][0]; c++){
 								trellis.setLED(funtionMatrix1[c]);
 						}
 						trellis.writeDisplay();
-						volumeValue81 = LOW;
-						volumeValue82 = HIGH;
-					} else if (volumeValue82 == HIGH){ //change the volumevalue
+						noteVolume8a = LOW;
+						noteVolume8b = HIGH;
+					} else if (noteVolume8b == HIGH){ //change the noteVolume
 						noteOffVoid(notePitch[channelView][pageView[channelView]][volumeEdit][0],channelView);
-						for (byte c=pageView[channelView]; c<16; c++){
+						for (int c=pageView[channelView]; c<256; c++){
 							if (pageActive[channelView][c] == HIGH){
 								for (byte x=0; x<16; x++){
-										volumeValue[channelView][c][volumeEdit][x] = funtionMatrix2[z];
+										noteVolume[channelView][c][volumeEdit][x] = funtionMatrix2[z];
 								}
 							}
 						}
-						noteOnVoid(notePitch[channelView][pageView[channelView]][volumeEdit][0],volumeValue[channelView][pageView[channelView]][volumeEdit][0],channelView);
+						noteOnVoid(notePitch[channelView][pageView[channelView]][volumeEdit][0],noteVolume[channelView][pageView[channelView]][volumeEdit][0],channelView);
 						noteStopFunction[channelView][notePitch[channelView][pageView[channelView]][volumeEdit][0]] = HIGH;
 						for (byte c=0; c<128; c++){
 									trellis.clrLED(c);
 						}
-						for (byte c=0; c<=volumeValue[channelView][pageView[channelView]][volumeEdit][0]; c++){
+						for (byte c=0; c<=noteVolume[channelView][pageView[channelView]][volumeEdit][0]; c++){
 								trellis.setLED(funtionMatrix1[c]);
 						}
 						
 						trellis.writeDisplay();
-					} else if (volumeValueAll1 == HIGH){ //to which volume should the value be changed
+					} else if (noteVolume127a == HIGH){ //to which volume should the value be changed
 						for (byte c=0; c<128; c++){
 								trellis.clrLED(c);
 						}
 						volumeEdit = funtionMatrix2[z];
-						for (byte c=0; c<=volumeValue[channelView][pageView[channelView]][volumeEdit/16][volumeEdit%16]; c++){
+						for (byte c=0; c<=noteVolume[channelView][pageView[channelView]][volumeEdit/16][volumeEdit%16]; c++){
 								trellis.setLED(funtionMatrix1[c]);
 						}
 						trellis.writeDisplay();
-						volumeValueAll1 = LOW;
-						volumeValueAll2 = HIGH;
-					} else if (volumeValueAll2 == HIGH){ //change the volumevalue
+						noteVolume127a = LOW;
+						noteVolume127b = HIGH;
+					} else if (noteVolume127b == HIGH){ //change the noteVolume
 						noteOffVoid(notePitch[channelView][pageView[channelView]][volumeEdit/16][volumeEdit%16],channelView);
-						volumeValue[channelView][pageView[channelView]][volumeEdit/16][volumeEdit%16] = funtionMatrix2[z];
-						noteOnVoid(notePitch[channelView][pageView[channelView]][volumeEdit/16][volumeEdit%16],volumeValue[channelView][pageView[channelView]][volumeEdit/16][volumeEdit%16],channelView);
+						noteVolume[channelView][pageView[channelView]][volumeEdit/16][volumeEdit%16] = funtionMatrix2[z];
+						noteOnVoid(notePitch[channelView][pageView[channelView]][volumeEdit/16][volumeEdit%16],noteVolume[channelView][pageView[channelView]][volumeEdit/16][volumeEdit%16],channelView);
 						noteStopFunction[channelView][notePitch[channelView][pageView[channelView]][volumeEdit/16][volumeEdit%16]] = HIGH;
 						for (byte c=0; c<128; c++){
 									trellis.clrLED(c);
 						}
-						for (byte c=0; c<=volumeValue[channelView][pageView[channelView]][volumeEdit/16][volumeEdit%16]; c++){
+						for (byte c=0; c<=noteVolume[channelView][pageView[channelView]][volumeEdit/16][volumeEdit%16]; c++){
 								trellis.setLED(funtionMatrix1[c]);
 						}
 						trellis.writeDisplay();
@@ -526,128 +564,40 @@ void loop(){
 									patternEdit2 = 8;
 									break;
 							}
-							for (byte c=pageView[channelView]; c<16; c++){
+							for (int c=pageView[channelView]; c<256; c++){
 								if (pageActive[channelView][c] == HIGH){
 									for (byte y=0; y<16; y++){
 										if (y % patternEdit2 == 0){
 											softwareMatrix[channelView][c][hardwareMatrix[patternEdit1][y]] = HIGH;
+											noteOnTrigger[channelView][c][hardwareMatrix[patternEdit1][y]] = HIGH;
+											noteOffTrigger[channelView][c][hardwareMatrix[patternEdit1][y]] = HIGH;
 										} else {
 											softwareMatrix[channelView][c][hardwareMatrix[patternEdit1][y]] = LOW;
+											noteOnTrigger[channelView][c][hardwareMatrix[patternEdit1][y]] = LOW;
+											noteOffTrigger[channelView][c][hardwareMatrix[patternEdit1][y]] = LOW;
 										}
 									}
 								}
 							}
 							trellis.writeDisplay();
 						}
-					} else if (setMuteSolo == HIGH){ //Set Mute
-						if (z == 0 || z == 4 || z == 8 || z == 12 || z == 64 || z == 68 || z == 72 || z == 76 || z == 1 || z == 5 || z == 9 || z == 13 || z == 65 || z == 69 || z == 73 || z == 77){
-							switch (z) {
-								case 0:
-									muteSoloRowEdit = 0;
-									muteOrSoloEdit = LOW;
-									break;
-								case 1:
-									muteSoloRowEdit = 0;
-									muteOrSoloEdit = HIGH;
-									break;
-								case 4:
-									muteSoloRowEdit = 1;
-									muteOrSoloEdit = LOW;
-									break;
-								case 5:
-									muteSoloRowEdit = 1;
-									muteOrSoloEdit = HIGH;
-									break;
-								case 8:
-									muteSoloRowEdit = 2;
-									muteOrSoloEdit = LOW;
-									break;
-								case 9:
-									muteSoloRowEdit = 2;
-									muteOrSoloEdit = HIGH;
-									break;
-								case 12:
-									muteSoloRowEdit = 3;
-									muteOrSoloEdit = LOW;
-									break;
-								case 13:
-									muteSoloRowEdit = 3;
-									muteOrSoloEdit = HIGH;
-									break;
-								case 64:
-									muteSoloRowEdit = 4;
-									muteOrSoloEdit = LOW;
-									break;
-								case 65:
-									muteSoloRowEdit = 4;
-									muteOrSoloEdit = HIGH;
-									break;
-								case 68:
-									muteSoloRowEdit = 5;
-									muteOrSoloEdit = LOW;
-									break;
-								case 69:
-									muteSoloRowEdit = 5;
-									muteOrSoloEdit = HIGH;
-									break;
-								case 72:
-									muteSoloRowEdit = 6;
-									muteOrSoloEdit = LOW;
-									break;
-								case 73:
-									muteSoloRowEdit = 6;
-									muteOrSoloEdit = HIGH;
-									break;
-								case 76:
-									muteSoloRowEdit = 7;
-									muteOrSoloEdit = LOW;
-									break;
-								case 77:
-									muteSoloRowEdit = 7;
-									muteOrSoloEdit = HIGH;
-									break;
-							}
-							muteSoloRow[channelView][muteSoloRowEdit][muteOrSoloEdit] = !muteSoloRow[channelView][muteSoloRowEdit][muteOrSoloEdit];
-							countSolos = 0;
-							for (eightRows=0; eightRows<8; eightRows++){
-								if (muteSoloRow[channelView][eightRows][1] == HIGH && muteSoloRow[channelView][eightRows][0] == LOW){
-									countSolos++;
-								}
-							}
-							if (countSolos > 0 && countSolos < 8){
-								if (muteOrSoloEdit == HIGH && muteSoloRow[channelView][muteSoloRowEdit][0] == LOW){
-									
-								} else {
-									muteSoloRow[channelView][muteSoloRowEdit][!muteOrSoloEdit] = !muteSoloRow[channelView][muteSoloRowEdit][!muteOrSoloEdit];
-								}
-								
-								for (eightRows=0; eightRows<8; eightRows++){
-									if (muteSoloRow[channelView][eightRows][0] == LOW){
-										autoMuteRow[channelView][eightRows] = !muteSoloRow[channelView][eightRows][1];
-									}
-								}
-							} else {
-								for (eightRows=0; eightRows<8; eightRows++){
-									muteSoloRow[channelView][eightRows][1] = LOW;
-									autoMuteRow[channelView][eightRows] = LOW;
-								}
-							}
-							
-							for (byte c=0; c<128; c++){
-								trellis.clrLED(c);
-							}
-							for (byte eightRows=0; eightRows<8; eightRows++){
-								if (muteSoloRow[channelView][eightRows][0] == HIGH || autoMuteRow[channelView][eightRows] == HIGH){
-									trellis.setLED(hardwareMatrix[eightRows][0]);
-								}
-								if (muteSoloRow[channelView][eightRows][1] == HIGH){
-									trellis.setLED(hardwareMatrix[eightRows][1]);
-								}
-							}
-							trellis.writeDisplay();
+					} else if (setMute == HIGH){ //Set Mute
+						mute[funtionMatrix2[z]/16][funtionMatrix2[z]%16] = !mute[funtionMatrix2[z]/16][funtionMatrix2[z]%16];
+						//mute[8][16];
+						for (byte c=0; c<128; c++){
+							trellis.clrLED(c);
 						}
+						for (byte c=0; c<8; c++){
+							for (byte y=0; y<16; y++){
+								if (mute[c][y] == LOW){
+									trellis.setLED(hardwareMatrix[c][y]);
+								}
+							}
+						}
+						trellis.writeDisplay();
 					} else if (setBPM == HIGH){
 						BPM = funtionMatrix2[z] + 57;
+						clockIntervall = 60.0/BPM*1000*1000/24.0;
 						for (byte c=0; c<128; c++){
 							if (c < BPM - 56){
 								trellis.setLED(funtionMatrix1[c]);
@@ -666,39 +616,105 @@ void loop(){
 							}
 						}
 						trellis.writeDisplay();
-					} else if (copyPage1 == HIGH){
+					} else if (setLongNotes == HIGH){
+						if (softwareMatrix[channelView][pageView[channelView]][z] == HIGH){
+							noteOnOff[channelView][pageView[channelView]][funtionMatrix2[z]/16][funtionMatrix2[z]%16] = !noteOnOff[channelView][pageView[channelView]][funtionMatrix2[z]/16][funtionMatrix2[z]%16];
+							if (noteOnOff[channelView][pageView[channelView]][funtionMatrix2[z]/16][funtionMatrix2[z]%16] == LOW){
+								noteOnTrigger[channelView][pageView[channelView]][z] = HIGH;
+								noteOffTrigger[channelView][pageView[channelView]][z] = HIGH;
+							}
+						}
+						for (int c=0; c<256; c++){
+							if (pageActive[channelView][pageChange[c][pageView[channelView]]] == HIGH){
+								pageNextB = pageChange[c][pageView[channelView]];
+								break;
+							}
+						}
+						for (byte c=0; c<8; c++){
+							for (byte y=0; y<15; y++){
+								if (noteOnOff[channelView][pageView[channelView]][c][y] == HIGH && noteOnOff[channelView][pageView[channelView]][c][pageChange[0][y]] == HIGH){
+									noteOffTrigger[channelView][pageView[channelView]][hardwareMatrix[c][y]] = LOW;
+									noteOnTrigger[channelView][pageView[channelView]][hardwareMatrix[c][pageChange[0][y]]] = LOW;
+								}
+							}
+							if (noteOnOff[channelView][pageView[channelView]][c][15] == HIGH && noteOnOff[channelView][pageNextB][c][0] == HIGH){
+								//noteOnVoid(100,100,0);
+								noteOffTrigger[channelView][pageView[channelView]][hardwareMatrix[c][15]] = LOW;
+								noteOnTrigger[channelView][pageNextB][hardwareMatrix[c][0]] = LOW;
+							}
+						}
+						for (byte c=0; c<8; c++){
+							for (byte y=0; y<15; y++){
+								if (noteOnOff[channelView][pageView[channelView]][c][y] == HIGH && noteOnOff[channelView][pageView[channelView]][c][pageChange[0][y]] == LOW){
+									noteOffTrigger[channelView][pageView[channelView]][hardwareMatrix[c][y]] = HIGH;
+								} else if (noteOnOff[channelView][pageView[channelView]][c][y] == LOW && noteOnOff[channelView][pageView[channelView]][c][pageChange[0][y]] == HIGH){
+									noteOnTrigger[channelView][pageView[channelView]][hardwareMatrix[c][pageChange[0][y]]] = HIGH;
+								}
+							}
+							if (noteOnOff[channelView][pageView[channelView]][c][15] == HIGH && noteOnOff[channelView][pageNextB][c][0] == LOW){
+								noteOffTrigger[channelView][pageView[channelView]][hardwareMatrix[c][15]] = HIGH;
+							} else if (noteOnOff[channelView][pageView[channelView]][c][15] == LOW && noteOnOff[channelView][pageNextB][c][0] == HIGH){
+								noteOnTrigger[channelView][pageNextB][hardwareMatrix[c][0]] = HIGH;
+							}
+						}
+						for (byte c=0; c<8; c++){
+							for (byte y=0; y<16; y++){
+								if (noteOnOff[channelView][pageView[channelView]][c][y] == HIGH){
+									trellis.setLED(hardwareMatrix[c][y]);
+								} else {
+									trellis.clrLED(hardwareMatrix[c][y]);
+								}
+							}
+						}
+						trellis.writeDisplay();
+					} else if (setNoteOff == HIGH){
+						noteOffTrigger[channelView][pageView[channelView]][z] = !noteOffTrigger[channelView][pageView[channelView]][z];
+						for (byte c=0; c<128; c++){
+							if (noteOffTrigger[channelView][pageView[channelView]][c] == HIGH){
+								trellis.setLED(c);
+							} else {
+								trellis.clrLED(c);
+							}
+						}
+						trellis.writeDisplay();
+					} else if (copyPage == HIGH){
 						if(funtionMatrix2[z] > 31 && funtionMatrix2[z] < 48){
-							if(copyPageAnsicht[funtionMatrix2[z]-32] == LOW){
-								copyPageAnsicht[funtionMatrix2[z]-32] = HIGH;
+							if(copyPageView[funtionMatrix2[z]-32] == LOW){
+								copyPageView[funtionMatrix2[z]-32] = HIGH;
 								trellis.setLED(z);
 							} else {
-								copyPageAnsicht[funtionMatrix2[z]-32] = LOW;
+								copyPageView[funtionMatrix2[z]-32] = LOW;
 								trellis.clrLED(z);
 							}
 							trellis.writeDisplay();
 						}
-						if(funtionMatrix2[z] > 63 && funtionMatrix2[z] < 80){
-							if(copyPageChannel[funtionMatrix2[z]-64] == LOW){
-								copyPageChannel[funtionMatrix2[z]-64] = HIGH;
+						if(funtionMatrix2[z] > 95 && funtionMatrix2[z] < 96+channelCount){
+							if(copyPageChannel[funtionMatrix2[z]-96] == LOW){
+								copyPageChannel[funtionMatrix2[z]-96] = HIGH;
 								trellis.setLED(z);
 							} else {
-								copyPageChannel[funtionMatrix2[z]-64] = LOW;
+								copyPageChannel[funtionMatrix2[z]-96] = LOW;
 								trellis.clrLED(z);
 							}
 							trellis.writeDisplay();
 						}
-						if(z == 72){
+						if(z == 76){
 							for (byte c=0; c<16; c++){
-								if(copyPageAnsicht[c] == HIGH){
+								if(copyPageView[c] == HIGH){
 									for (byte y=0; y<channelCount; y++){
 										if(copyPageChannel[y] == HIGH){
 											for (byte x=0; x<128; x++){
 												softwareMatrix[y][c][x] = softwareMatrix[channelView][pageView[channelView]][x];
+												noteOnTrigger[y][c][x] = noteOnTrigger[channelView][pageView[channelView]][x];
+												noteOffTrigger[y][c][x] = noteOffTrigger[channelView][pageView[channelView]][x];
+												
 											}
 											for (byte x=0; x<8; x++){
 												for (byte a=0; a<16; a++){
 													notePitch[y][c][x][a] = notePitch[channelView][pageView[channelView]][x][a];
-													volumeValue[y][c][x][a] = notePitch[channelView][pageView[channelView]][x][a];
+													noteVolume[y][c][x][a] = noteVolume[channelView][pageView[channelView]][x][a];
+													noteStart[y][c][x][a] = noteStart[channelView][pageView[channelView]][x][a];
+													noteEnd[y][c][x][a] = noteEnd[channelView][pageView[channelView]][x][a];
 												}
 											}
 										}
@@ -706,12 +722,12 @@ void loop(){
 								}
 							}
 							for (byte c=0; c<16; c++){
-								copyPageAnsicht[c] = LOW;
+								copyPageView[c] = LOW;
 							}
 							for (byte y=0; y<channelCount; y++){
 								copyPageChannel[y] = LOW;
 							}
-							copyPage1 = LOW;
+							copyPage = LOW;
 							functionView();
 						}
 					} else if (playLive == HIGH){
@@ -724,6 +740,196 @@ void loop(){
 								playLiveView();
 							}
 						}
+					} else if (noteStart8a == HIGH && (z == 0 || z == 4 || z == 8 || z == 12 || z == 64 || z == 68 || z == 72 || z == 76)){ //to which row should the Start edited
+						for (byte c=0; c<128; c++){
+								trellis.clrLED(c);
+						}
+						switch (z) {
+							case 0:
+								noteStartEdit = 0;
+								break;
+							case 4:
+								noteStartEdit = 1;
+								break;
+							case 8:
+								noteStartEdit = 2;
+								break;
+							case 12:
+								noteStartEdit = 3;
+								break;
+							case 64:
+								noteStartEdit = 4;
+								break;
+							case 68:
+								noteStartEdit = 5;
+								break;
+							case 72:
+								noteStartEdit = 6;
+								break;
+							case 76:
+								noteStartEdit = 7;
+								break;
+						}
+						for (byte c=noteStart[channelView][pageView[channelView]][noteStartEdit][0];c<=noteLength[channelView]-noteEnd[channelView][pageView[channelView]][noteStartEdit][0];c++){
+							trellis.setLED(funtionMatrix1[c]);
+						}
+						trellis.writeDisplay();
+						noteStart8a = LOW;
+						noteStart8b = HIGH;
+					} else if (noteStart8b == HIGH){ //change the noteStart
+						if (funtionMatrix2[z] < noteLength[channelView]-noteEnd[channelView][pageView[channelView]][noteStartEdit][0]){
+							for (int c=pageView[channelView]; c<256; c++){
+								if (pageActive[channelView][c] == HIGH){
+									for (byte x=0; x<16; x++){
+										noteStart[channelView][c][noteStartEdit][x] = funtionMatrix2[z];
+									}
+								}
+							}
+							for (byte c=0; c<128; c++){
+								trellis.clrLED(c);
+							}
+							for (byte c=noteStart[channelView][pageView[channelView]][noteStartEdit][0];c<=noteLength[channelView]-noteEnd[channelView][pageView[channelView]][noteStartEdit][0];c++){
+								trellis.setLED(funtionMatrix1[c]);
+							}
+							trellis.writeDisplay();
+						}
+
+					} else if (noteStart127a == HIGH){ //to which note should the value be changed
+						for (byte c=0; c<128; c++){
+								trellis.clrLED(c);
+						}
+						noteStartEdit = funtionMatrix2[z];
+						for (byte c=noteStart[channelView][pageView[channelView]][noteStartEdit/16][noteStartEdit%16];c<=noteLength[channelView]-noteEnd[channelView][pageView[channelView]][noteStartEdit/16][noteStartEdit%16];c++){
+							trellis.setLED(funtionMatrix1[c]);
+						}
+						trellis.writeDisplay();
+						noteStart127a = LOW;
+						noteStart127b = HIGH;
+					} else if (noteStart127b == HIGH){ //change the notePitch
+						if (funtionMatrix2[z] < noteLength[channelView]-noteEnd[channelView][pageView[channelView]][noteStartEdit/16][noteStartEdit%16]){
+							noteStart[channelView][pageView[channelView]][noteStartEdit/16][noteStartEdit%16] = funtionMatrix2[z];
+							for (byte c=0; c<128; c++){
+										trellis.clrLED(c);
+							}
+							for (byte c=noteStart[channelView][pageView[channelView]][noteStartEdit/16][noteStartEdit%16];c<=noteLength[channelView]-noteEnd[channelView][pageView[channelView]][noteStartEdit/16][noteStartEdit%16];c++){
+								trellis.setLED(funtionMatrix1[c]);
+							}
+							trellis.writeDisplay();
+						} 
+					} else if (noteStartChannel == HIGH){ //to which note should the value be changed
+						if (funtionMatrix2[z] < noteLength[channelView]-noteEnd[channelView][pageView[channelView]][0][0]){
+							for (int c=pageView[channelView]; c<256; c++){
+								if (pageActive[channelView][c] == HIGH){
+									for (byte y=0; y<8; y++){
+										for (byte x=0; x<16; x++){
+											noteStart[channelView][c][y][x] = funtionMatrix2[z];
+										}
+									}
+								}
+							}
+							for (byte c=0; c<128; c++){
+								trellis.clrLED(c);
+							}
+							for (byte c=noteStart[channelView][pageView[channelView]][0][0];c<=noteLength[channelView]-noteEnd[channelView][pageView[channelView]][0][0];c++){
+								trellis.setLED(funtionMatrix1[c]);
+							}
+							trellis.writeDisplay();
+						}
+					} else if (noteEnd8a == HIGH && (z == 0 || z == 4 || z == 8 || z == 12 || z == 64 || z == 68 || z == 72 || z == 76)){ //to which row should the Start edited
+						for (byte c=0; c<128; c++){
+								trellis.clrLED(c);
+						}
+						switch (z) {
+							case 0:
+								noteEndEdit = 0;
+								break;
+							case 4:
+								noteEndEdit = 1;
+								break;
+							case 8:
+								noteEndEdit = 2;
+								break;
+							case 12:
+								noteEndEdit = 3;
+								break;
+							case 64:
+								noteEndEdit = 4;
+								break;
+							case 68:
+								noteEndEdit = 5;
+								break;
+							case 72:
+								noteEndEdit = 6;
+								break;
+							case 76:
+								noteEndEdit = 7;
+								break;
+						}
+						for (byte c=noteStart[channelView][pageView[channelView]][noteEndEdit][0];c<=noteLength[channelView]-noteEnd[channelView][pageView[channelView]][noteEndEdit][0];c++){
+							trellis.setLED(funtionMatrix1[c]);
+						}
+						trellis.writeDisplay();
+						noteEnd8a = LOW;
+						noteEnd8b = HIGH;
+					} else if (noteEnd8b == HIGH){ //change the noteEnd
+						if (funtionMatrix2[z] < noteLength[channelView] && funtionMatrix2[z] > noteStart[channelView][pageView[channelView]][noteEndEdit][0]){
+							for (int c=pageView[channelView]; c<256; c++){
+								if (pageActive[channelView][c] == HIGH){
+									for (byte x=0; x<16; x++){
+										noteEnd[channelView][c][noteEndEdit][x] = noteLength[channelView]-funtionMatrix2[z];
+									}
+								}
+							}
+							for (byte c=0; c<128; c++){
+								trellis.clrLED(c);
+							}
+							for (byte c=noteStart[channelView][pageView[channelView]][noteEndEdit][0];c<=noteLength[channelView]-noteEnd[channelView][pageView[channelView]][noteEndEdit][0];c++){
+								trellis.setLED(funtionMatrix1[c]);
+							}
+							trellis.writeDisplay();
+						}
+
+					} else if (noteEnd127a == HIGH){ //to which note should the value be changed
+						for (byte c=0; c<128; c++){
+								trellis.clrLED(c);
+						}
+						noteEndEdit = funtionMatrix2[z];
+						for (byte c=noteStart[channelView][pageView[channelView]][noteEndEdit/16][noteEndEdit%16];c<=noteLength[channelView]-noteEnd[channelView][pageView[channelView]][noteEndEdit/16][noteEndEdit%16];c++){
+							trellis.setLED(funtionMatrix1[c]);
+						}
+						trellis.writeDisplay();
+						notePitch127a = LOW;
+						notePitch127b = HIGH;
+					} else if (noteEnd127b == HIGH){ //change the notePitch
+						if (funtionMatrix2[z] < noteLength[channelView] && funtionMatrix2[z] > noteStart[channelView][pageView[channelView]][noteEndEdit/16][noteEndEdit%16]){
+							noteEnd[channelView][pageView[channelView]][noteEndEdit/16][noteEndEdit%16] = noteLength[channelView]-funtionMatrix2[z];
+							for (byte c=0; c<128; c++){
+								trellis.clrLED(c);
+							}
+							for (byte c=noteStart[channelView][pageView[channelView]][noteEndEdit/16][noteEndEdit%16];c<=noteLength[channelView]-noteEnd[channelView][pageView[channelView]][noteEndEdit/16][noteEndEdit%16];c++){
+								trellis.setLED(funtionMatrix1[c]);
+							}
+							trellis.writeDisplay();
+						} 
+					} else if (noteEndChannel == HIGH){ //to which note should the value be changed
+						if (funtionMatrix2[z] < noteLength[channelView] && funtionMatrix2[z] > noteStart[channelView][pageView[channelView]][0][0]){
+							for (int c=pageView[channelView]; c<256; c++){
+								if (pageActive[channelView][c] == HIGH){
+									for (byte y=0; y<8; y++){
+										for (byte x=0; x<16; x++){
+											noteEnd[channelView][c][y][x] = noteLength[channelView]-funtionMatrix2[z];
+										}
+									}
+								}
+							}
+							for (byte c=0; c<128; c++){
+								trellis.clrLED(c);
+							}
+							for (byte c=noteStart[channelView][pageView[channelView]][0][0];c<=noteLength[channelView]-noteEnd[channelView][pageView[channelView]][0][0];c++){
+								trellis.setLED(funtionMatrix1[c]);
+							}
+							trellis.writeDisplay();
+						}
 					} else {
 						switch (z) {
 							case 0: //Set notePitch for 8
@@ -735,19 +941,16 @@ void loop(){
 										trellis.setLED(hardwareMatrix[c][0]);
 									}
 									trellis.writeDisplay();
-									notePitch81 = HIGH;
+									notePitch8a = HIGH;
 								}
 								break;
 							case 1: //Set notePitch for All
 								if (isPlay == LOW){
 									for (byte c=0; c<128; c++){
-										trellis.clrLED(c);
-									}
-									for (byte c=0; c<128; c++){
 										trellis.setLED(funtionMatrix1[c]);
 									}
 									trellis.writeDisplay();
-									notePitchAll1 = HIGH;
+									notePitch127a = HIGH;
 								}
 								break;
 							case 2: //Set notePitch for 8
@@ -759,19 +962,16 @@ void loop(){
 										trellis.setLED(hardwareMatrix[c][0]);
 									}
 									trellis.writeDisplay();
-									volumeValue81 = HIGH;
+									noteVolume8a = HIGH;
 								}
 								break;
 							case 3: //Set notePitch for All
 								if (isPlay == LOW){
 									for (byte c=0; c<128; c++){
-										trellis.clrLED(c);
-									}
-									for (byte c=0; c<128; c++){
 										trellis.setLED(funtionMatrix1[c]);
 									}
 									trellis.writeDisplay();
-									volumeValueAll1 = HIGH;
+									noteVolume127a = HIGH;
 								}
 								break;
 							case 16: //Set Pattern
@@ -784,19 +984,19 @@ void loop(){
 								trellis.writeDisplay();
 								setPattern1 = HIGH;
 								break;
-							case 17: //Set SoloMute
+							case 17: //Set Mute
 								for (byte c=0; c<128; c++){
 									trellis.clrLED(c);
 								}
-								for (byte eightRows=0; eightRows<8; eightRows++){
-									if (muteSoloRow[channelView][eightRows][0] == HIGH || autoMuteRow[channelView][eightRows] == HIGH){
-										trellis.setLED(hardwareMatrix[eightRows][0]);
-									} else if (muteSoloRow[channelView][eightRows][1] == HIGH){
-										trellis.setLED(hardwareMatrix[eightRows][1]);
+								for (byte c=0; c<8; c++){
+									for (byte y=0; y<16; y++){
+										if (mute[c][y] == LOW){
+											trellis.setLED(hardwareMatrix[c][y]);
+										}
 									}
 								}
 								trellis.writeDisplay();
-								setMuteSolo = HIGH;
+								setMute = HIGH;
 								break;
 							case 18: //Set Note Value to 4
 								if (isPlay == LOW){
@@ -804,8 +1004,10 @@ void loop(){
 										for (byte a=0; a<16; a++){
 											for (byte b=0; b<8; b++){
 												for (byte c=0; c<16; c++){
-													noteStart[channelView][a][b][c] = round(1/float(noteLength[channelView])*float(noteStart[channelView][a][b][c])*24);
-													noteEnd[channelView][a][b][c] = round(1/float(noteLength[channelView])*float(noteEnd[channelView][a][b][c])*24);
+													/*noteStart[channelView][a][b][c] = round(1/float(noteLength[channelView])*float(noteStart[channelView][a][b][c])*24);
+													noteEnd[channelView][a][b][c] = round(1/float(noteLength[channelView])*float(noteEnd[channelView][a][b][c])*24);*/
+													noteStart[channelView][a][b][c] = map(noteStart[channelView][a][b][c],0,noteLength[channelView]-1,0,23);
+													noteEnd[channelView][a][b][c] = map(noteEnd[channelView][a][b][c],1,noteLength[channelView],1,24);
 												}
 											}
 										}
@@ -814,8 +1016,8 @@ void loop(){
 										for (byte a=0; a<16; a++){
 											for (byte b=0; b<8; b++){
 												for (byte c=0; c<16; c++){
-													noteStart[channelView][a][b][c] = round(1/float(noteLength[channelView])*float(noteStart[channelView][a][b][c])*16);
-													noteEnd[channelView][a][b][c] = round(1/float(noteLength[channelView])*float(noteEnd[channelView][a][b][c])*16);
+													noteStart[channelView][a][b][c] = map(noteStart[channelView][a][b][c],0,noteLength[channelView]-1,0,15);
+													noteEnd[channelView][a][b][c] = map(noteEnd[channelView][a][b][c],1,noteLength[channelView],1,16);
 												}
 											}
 										}
@@ -830,8 +1032,8 @@ void loop(){
 										for (byte a=0; a<16; a++){
 											for (byte b=0; b<8; b++){
 												for (byte c=0; c<16; c++){
-													noteStart[channelView][a][b][c] = round(1/float(noteLength[channelView])*float(noteStart[channelView][a][b][c])*12);
-													noteEnd[channelView][a][b][c] = round(1/float(noteLength[channelView])*float(noteEnd[channelView][a][b][c])*12);
+													noteStart[channelView][a][b][c] = map(noteStart[channelView][a][b][c],0,noteLength[channelView]-1,0,11);
+													noteEnd[channelView][a][b][c] = map(noteEnd[channelView][a][b][c],1,noteLength[channelView],1,12);
 												}
 											}
 										}
@@ -840,8 +1042,8 @@ void loop(){
 										for (byte a=0; a<16; a++){
 											for (byte b=0; b<8; b++){
 												for (byte c=0; c<16; c++){
-													noteStart[channelView][a][b][c] = round(1/float(noteLength[channelView])*float(noteStart[channelView][a][b][c])*8);
-													noteEnd[channelView][a][b][c] = round(1/float(noteLength[channelView])*float(noteEnd[channelView][a][b][c])*8);
+													noteStart[channelView][a][b][c] = map(noteStart[channelView][a][b][c],0,noteLength[channelView]-1,0,7);
+													noteEnd[channelView][a][b][c] = map(noteEnd[channelView][a][b][c],1,noteLength[channelView],1,8);
 												}
 											}
 										}
@@ -856,8 +1058,8 @@ void loop(){
 										for (byte a=0; a<16; a++){
 											for (byte b=0; b<8; b++){
 												for (byte c=0; c<16; c++){
-													noteStart[channelView][a][b][c] = round(1/float(noteLength[channelView])*float(noteStart[channelView][a][b][c])*6);
-													noteEnd[channelView][a][b][c] = round(1/float(noteLength[channelView])*float(noteEnd[channelView][a][b][c])*6);
+													noteStart[channelView][a][b][c] = map(noteStart[channelView][a][b][c],0,noteLength[channelView]-1,0,5);
+													noteEnd[channelView][a][b][c] = map(noteEnd[channelView][a][b][c],1,noteLength[channelView],1,6);
 												}
 											}
 										}
@@ -866,8 +1068,8 @@ void loop(){
 										for (byte a=0; a<16; a++){
 											for (byte b=0; b<8; b++){
 												for (byte c=0; c<16; c++){
-													noteStart[channelView][a][b][c] = round(1/float(noteLength[channelView])*float(noteStart[channelView][a][b][c])*4);
-													noteEnd[channelView][a][b][c] = round(1/float(noteLength[channelView])*float(noteEnd[channelView][a][b][c])*4);
+													noteStart[channelView][a][b][c] = map(noteStart[channelView][a][b][c],0,noteLength[channelView]-1,0,3);
+													noteEnd[channelView][a][b][c] = map(noteEnd[channelView][a][b][c],1,noteLength[channelView],1,4);
 												}
 											}
 										}
@@ -882,8 +1084,8 @@ void loop(){
 										for (byte a=0; a<16; a++){
 											for (byte b=0; b<8; b++){
 												for (byte c=0; c<16; c++){
-													noteStart[channelView][a][b][c] = round(1/float(noteLength[channelView])*float(noteStart[channelView][a][b][c])*3);
-													noteEnd[channelView][a][b][c] = round(1/float(noteLength[channelView])*float(noteEnd[channelView][a][b][c])*3);
+													noteStart[channelView][a][b][c] = map(noteStart[channelView][a][b][c],0,noteLength[channelView]-1,0,2);
+													noteEnd[channelView][a][b][c] = map(noteEnd[channelView][a][b][c],1,noteLength[channelView],1,3);
 												}
 											}
 										}
@@ -892,8 +1094,8 @@ void loop(){
 										for (byte a=0; a<16; a++){
 											for (byte b=0; b<8; b++){
 												for (byte c=0; c<16; c++){
-													noteStart[channelView][a][b][c] = round(1/float(noteLength[channelView])*float(noteStart[channelView][a][b][c])*2);
-													noteEnd[channelView][a][b][c] = round(1/float(noteLength[channelView])*float(noteEnd[channelView][a][b][c])*2);
+													noteStart[channelView][a][b][c] = map(noteStart[channelView][a][b][c],0,noteLength[channelView]-1,0,1);
+													noteEnd[channelView][a][b][c] = map(noteEnd[channelView][a][b][c],1,noteLength[channelView],1,2);
 												}
 											}
 										}
@@ -908,19 +1110,22 @@ void loop(){
 										for (byte a=0; a<16; a++){
 											for (byte b=0; b<8; b++){
 												for (byte c=0; c<16; c++){
-													noteStart[channelView][a][b][c] = round(1/float(noteLength[channelView])*float(noteStart[channelView][a][b][c])*(noteLength[channelView]*2/3));
-													noteEnd[channelView][a][b][c] = round(1/float(noteLength[channelView])*float(noteEnd[channelView][a][b][c])*(noteLength[channelView]*2/3));
+													/*noteStart[channelView][a][b][c] = round(1/float(noteLength[channelView])*float(noteStart[channelView][a][b][c])*(noteLength[channelView]*2/3));
+													noteEnd[channelView][a][b][c] = round(1/float(noteLength[channelView])*float(noteEnd[channelView][a][b][c])*(noteLength[channelView]*2/3));*/
+													noteStart[channelView][a][b][c] = map(noteStart[channelView][a][b][c],0,noteLength[channelView]-1,0,noteLength[channelView]*2/3-1);
+													noteEnd[channelView][a][b][c] = map(noteEnd[channelView][a][b][c],1,noteLength[channelView],1,noteLength[channelView]*2/3);
 												}
 											}
 										}
 										noteLength[channelView] = noteLength[channelView]*2/3;
 										noteTriplet[channelView] = HIGH;
+										steps[channelView] = tripletStep[noteTriplet[channelView]];
 									} else {
 										for (byte a=0; a<16; a++){
 											for (byte b=0; b<8; b++){
 												for (byte c=0; c<16; c++){
-													noteStart[channelView][a][b][c] = round(1/float(noteLength[channelView])*float(noteStart[channelView][a][b][c])*(noteLength[channelView]*3/2));
-													noteEnd[channelView][a][b][c] = round(1/float(noteLength[channelView])*float(noteEnd[channelView][a][b][c])*(noteLength[channelView]*3/2));
+													noteStart[channelView][a][b][c] = map(noteStart[channelView][a][b][c],0,noteLength[channelView]-1,0,noteLength[channelView]*3/2-1);
+													noteEnd[channelView][a][b][c] = map(noteEnd[channelView][a][b][c],1,noteLength[channelView],1,noteLength[channelView]*3/2);
 												}
 											}
 										}
@@ -956,241 +1161,434 @@ void loop(){
 								trellis.writeDisplay();
 								setLatency = HIGH;
 								break;
+							case 114: // Set LongNotes
+								for (byte c=0; c<8; c++){
+									for (byte y=0; y<16; y++){
+										if (noteOnOff[channelView][pageView[channelView]][c][y] == HIGH){
+											trellis.setLED(hardwareMatrix[c][y]);
+										} else {
+											trellis.clrLED(hardwareMatrix[c][y]);
+										}
+									}
+								}
+								trellis.writeDisplay();
+								setLongNotes = HIGH;
+								break;
+							case 115: // Invert LongNotes
+								longNotes[channelView] = !longNotes[channelView];
+								functionView();
+								break;
 							case 4: //Set pageView = 0
-								setAnsichtView(0);
+								setPageView1(0);
 								break;
 							case 5: //Set pageView = 1
-								setAnsichtView(1);
+								setPageView1(1);
 								break;
 							case 6: //Set pageView = 2
-								setAnsichtView(2);
+								setPageView1(2);
 								break;
 							case 7: //Set pageView = 3
-								setAnsichtView(3);
+								setPageView1(3);
 								break;
 							case 20: //Set pageView = 4
-								setAnsichtView(4);
+								setPageView1(4);
 								break;
 							case 21: //Set pageView = 5
-								setAnsichtView(5);
+								setPageView1(5);
 								break;
 							case 22: //Set pageView = 6
-								setAnsichtView(6);
+								setPageView1(6);
 								break;
 							case 23: //Set pageView = 7
-								setAnsichtView(7);
+								setPageView1(7);
 								break;
 							case 36: //Set pageView = 8
-								setAnsichtView(8);
+								setPageView1(8);
 								break;
 							case 37: //Set pageView = 9
-								setAnsichtView(9);
+								setPageView1(9);
 								break;
 							case 38: //Set pageView = 10
-								setAnsichtView(10);
+								setPageView1(10);
 								break;
 							case 39: //Set pageView = 11
-								setAnsichtView(11);
+								setPageView1(11);
 								break;
 							case 116: //Set pageView = 12
-								setAnsichtView(12);
+								setPageView1(12);
 								break;
 							case 117: //Set pageView = 13
-								setAnsichtView(13);
+								setPageView1(13);
 								break;
 							case 118: //Set pageView = 14
-								setAnsichtView(14);
+								setPageView1(14);
 								break;
 							case 119: //Set pageView = 15
-								setAnsichtView(15);
+								setPageView1(15);
 								break;
 							case 8: //Invert pageActive 0
-								pageActive[channelView][0] = !pageActive[channelView][0];
-								functionView();
+								setPageActive1(0);
 								break;
 							case 9: //Invert pageActive 1
-								pageActive[channelView][1] = !pageActive[channelView][1];
-								functionView();
+								setPageActive1(1);
 								break;
 							case 10: //Invert pageActive 2
-								pageActive[channelView][2] = !pageActive[channelView][2];
-								functionView();
+								setPageActive1(2);
 								break;
 							case 11: //Invert pageActive 3
-								pageActive[channelView][3] = !pageActive[channelView][3];
-								functionView();
+								setPageActive1(3);
 								break;
-							case 24: //Invert pageActive 4 
-								pageActive[channelView][4] = !pageActive[channelView][4];
-								functionView();
+							case 24: //Invert pageActive 4
+								setPageActive1(4);
 								break;
 							case 25: //Invert pageActive 5
-								pageActive[channelView][5] = !pageActive[channelView][5];
-								functionView();
+								setPageActive1(5);
 								break;
 							case 26: //Invert pageActive 6
-								pageActive[channelView][6] = !pageActive[channelView][6];
-								functionView();
+								setPageActive1(6);
 								break;
 							case 27: //Invert pageActive 7
-								pageActive[channelView][7] = !pageActive[channelView][7];
-								functionView();
+								setPageActive1(7);
 								break;
 							case 40: //Invert pageActive 8
-								pageActive[channelView][8] = !pageActive[channelView][8];
-								functionView();
+								setPageActive1(8);
 								break;
 							case 41: //Invert pageActive 9
-								pageActive[channelView][9] = !pageActive[channelView][9];
-								functionView();
+								setPageActive1(9);
 								break;
 							case 42: //Invert pageActive 10
-								pageActive[channelView][10] = !pageActive[channelView][10];
-								functionView();
+								setPageActive1(10);
 								break;
 							case 43: //Invert pageActive 11
-								pageActive[channelView][11] = !pageActive[channelView][11];
-								functionView();
+								setPageActive1(11);
 								break;
 							case 120: //Invert pageActive 12
-								pageActive[channelView][12] = !pageActive[channelView][12];
-								functionView();
+								setPageActive1(12);
 								break;
 							case 121: //Invert pageActive 13
-								pageActive[channelView][13] = !pageActive[channelView][13];
-								functionView();
+								setPageActive1(13);
 								break;
 							case 122: //Invert pageActive 14
-								pageActive[channelView][14] = !pageActive[channelView][14];
-								functionView();
+								setPageActive1(14);
 								break;
 							case 123: //Invert pageActive 15
-								pageActive[channelView][15] = !pageActive[channelView][15];
-								functionView();
+								setPageActive1(15);
 								break;
-							case 12: //Set channelView = 0
+							case 12: //Set pageView = 0
+								setPageView2(0);
+								break;
+							case 13: //Set pageView = 1
+								setPageView2(16);
+								break;
+							case 14: //Set pageView = 2
+								setPageView2(32);
+								break;
+							case 15: //Set pageView = 3
+								setPageView2(48);
+								break;
+							case 28: //Set pageView = 4
+								setPageView2(64);
+								break;
+							case 29: //Set pageView = 5
+								setPageView2(80);
+								break;
+							case 30: //Set pageView = 6
+								setPageView2(96);
+								break;
+							case 31: //Set pageView = 7
+								setPageView2(112);
+								break;
+							case 44: //Set pageView = 8
+								setPageView2(128);
+								break;
+							case 45: //Set pageView = 9
+								setPageView2(144);
+								break;
+							case 46: //Set pageView = 10
+								setPageView2(160);
+								break;
+							case 47: //Set pageView = 176
+								setPageView2(176);
+								break;
+							case 124: //Set pageView = 192
+								setPageView2(192);
+								break;
+							case 125: //Set pageView = 208
+								setPageView2(208);
+								break;
+							case 126: //Set pageView = 224
+								setPageView2(224);
+								break;
+							case 127: //Set pageView = 240
+								setPageView2(240);
+								break;
+							case 64: //Set pageView = 0
+								setPageActive2(0);
+								break;
+							case 65: //Set pageView = 1
+								setPageActive2(16);
+								break;
+							case 66: //Set pageView = 2
+								setPageActive2(32);
+								break;
+							case 67: //Set pageView = 3
+								setPageActive2(48);
+								break;
+							case 80: //Set pageView = 4
+								setPageActive2(64);
+								break;
+							case 81: //Set pageView = 5
+								setPageActive2(80);
+								break;
+							case 82: //Set pageView = 6
+								setPageActive2(96);
+								break;
+							case 83: //Set pageView = 7
+								setPageActive2(112);
+								break;
+							case 96: //Set pageView = 8
+								setPageActive2(128);
+								break;
+							case 97: //Set pageView = 9
+								setPageActive2(144);
+								break;
+							case 98: //Set pageView = 10
+								setPageActive2(160);
+								break;
+							case 99: //Set pageView = 176
+								setPageActive2(176);
+								break;
+							case 48: //Set pageView = 192
+								setPageActive2(192);
+								break;
+							case 49: //Set pageView = 208
+								setPageActive2(208);
+								break;
+							case 50: //Set pageView = 224
+								setPageActive2(224);
+								break;
+							case 51: //Set pageView = 240
+								setPageActive2(240);
+								break;
+							case 68: //Set channelView = 0
 								channelView = 0;
 								functionView();
 								break;
-							case 13: //Set channelView = 1
+							case 69: //Set channelView = 1
 								channelView = 1;
 								functionView();
 								break;
-							case 14: //Set channelView = 2
+							case 70: //Set channelView = 2
 								channelView = 2;
 								functionView();
 								break;
-							case 15: //Set channelView = 3
+							case 71: //Set channelView = 3
 								channelView = 3;
 								functionView();
 								break;
-							case 28: //Set channelView = 4
+							case 84: //Set channelView = 4
 								channelView = 4;
 								functionView();
 								break;
-							case 64: //Invert Channel Active 0
-								channelActive[0] = !channelActive[0];
-								if (channelActive[0] == LOW && isPlay == HIGH){
-									for (byte y=0; y<128; y++){
-										if (noteStop[0][y] == HIGH){
-											noteOffVoid(y,0);
-										}
-									}
-								}
+							case 85: //Set channelView = 5
+								channelView = 5;
 								functionView();
 								break;
-							case 65: //Invert Channel Active 1
-								channelActive[1] = !channelActive[1];
-								if (channelActive[1] == LOW && isPlay == HIGH){
-									for (byte y=0; y<128; y++){
-										if (noteStop[1][y] == HIGH){
-											noteOffVoid(y,1);
-										}
-									}
-								}
+							case 86: //Set channelView = 6
+								channelView = 6;
 								functionView();
 								break;
-							case 66: //Invert Channel Active 2
-								channelActive[2] = !channelActive[2];
-								if (channelActive[2] == LOW && isPlay == HIGH){
-									for (byte y=0; y<128; y++){
-										if (noteStop[2][y] == HIGH){
-											noteOffVoid(y,2);
-										}
-									}
-								}
+							case 87: //Set channelView = 7
+								channelView = 7;
 								functionView();
 								break;
-							case 67: //Invert Channel Active 3
-								channelActive[3] = !channelActive[3];
-								if (channelActive[3] == LOW && isPlay == HIGH){
-									for (byte y=0; y<128; y++){
-										if (noteStop[3][y] == HIGH){
-											noteOffVoid(y,3);
-										}
-									}
-								}
+							case 100: //Set channelView = 8
+								channelView = 8;
 								functionView();
 								break;
-							case 80: //Invert Channel Active 4
-								channelActive[4] = !channelActive[4];
-								if (channelActive[4] == LOW && isPlay == HIGH){
-									for (byte y=0; y<128; y++){
-										if (noteStop[4][y] == HIGH){
-											noteOffVoid(y,4);
-										}
-									}
-								}
+							case 101: //Set channelView = 9
+								channelView = 9;
 								functionView();
 								break;
-							case 68: //Invert Channel Long Note 0
-								longNotes[0] = !longNotes[0];
+							case 102: //Set channelView = 10
+								channelView = 10;
 								functionView();
 								break;
-							case 69: //Invert Channel Long Note 1
-								longNotes[1] = !longNotes[1];
+							case 103: //Set channelView = 11
+								channelView = 11;
 								functionView();
 								break;
-							case 70: //Invert Channel Long Note 2
-								longNotes[2] = !longNotes[2];
-								functionView();
+							case 72: //Invert Channel Active 0
+								setChannelActive(0);
 								break;
-							case 71: //Invert Channel Long Note 3
-								longNotes[3] = !longNotes[3];
-								functionView();
+							case 73: //Invert Channel Active 1
+								setChannelActive(1);
 								break;
-							case 84: //Invert Channel Long Note 4
-								longNotes[4] = !longNotes[4];
-								functionView();
+							case 74: //Invert Channel Active 2
+								setChannelActive(2);
 								break;
-							case 72: //Copy
+							case 75: //Invert Channel Active 3
+								setChannelActive(3);
+								break;
+							case 88: //Invert Channel Active 4
+								setChannelActive(4);
+								break;
+							case 89: //Invert Channel Active 5
+								setChannelActive(5);
+								break;
+							case 90: //Invert Channel Active 6
+								setChannelActive(6);
+								break;
+							case 91: //Invert Channel Active 7
+								setChannelActive(7);
+								break;
+							case 104: //Invert Channel Active 8
+								setChannelActive(8);
+								break;
+							case 105: //Invert Channel Active 9
+								setChannelActive(9);
+								break;
+							case 106: //Invert Channel Active 10
+								setChannelActive(10);
+								break;
+							case 107: //Invert Channel Active 11
+								setChannelActive(11);
+								break;
+							case 76: //Copy
 								for (byte x=0; x<16; x++){
+									trellis.clrLED(hardwareMatrix[0][x]);
 									trellis.clrLED(hardwareMatrix[2][x]);
-								}
-								for (byte x=0; x<channelCount; x++){
 									trellis.clrLED(hardwareMatrix[4][x]);
 								}
+								for (byte x=0; x<channelCount; x++){
+									trellis.clrLED(hardwareMatrix[6][x]);
+								}
+								for (byte x=1; x<16; x++){
+									trellis.clrLED(hardwareMatrix[7][x]);
+								}
 								trellis.writeDisplay();
-								copyPage1 = HIGH;
+								copyPage = HIGH;
 								break;
-							case 76: // Play Live
+							case 77: // Play Live
 								playLiveView();
 								playLiveTest = HIGH;
 								playLive = HIGH;
 								break;
-							case 77: // Record Live
+							case 78: // Record Live
 								playLiveView();
 								playLive = HIGH;
 								break;
-							case 78: // Quantize
+							case 79: // Mono Step Record
+								if (monoStepRecord == HIGH){
+									stepRecordStep++;
+									if (stepRecordStep == 16){
+										stepRecordStep = 0;
+										for (byte i=0; i<16; i++){
+											if (pageActive[channelView][pageChange[i][pageView[channelView]]] == HIGH) {
+												pageView[channelView] = pageChange[i][pageView[channelView]];
+												break;
+											}
+										}
+									}
+								} else {
+									monoStepRecord = HIGH;
+								}
+								for (byte c=0; c<128; c++){
+									trellis.clrLED(c);
+								}
+								for (byte x=0; x<=stepRecordStep; x++){
+									trellis.setLED(hardwareMatrix[0][x]);
+								}
+								trellis.setLED(hardwareMatrix[7][3]);
+								trellis.writeDisplay();
+								break;
+							case 93: // Quantize Start
 								for (byte a=0; a<16; a++){
 									for (byte b=0; b<8; b++){
 										for (byte c=0; c<16; c++){
 											noteStart[channelView][a][b][c] = 0;
+										}
+									}
+								}
+								break;
+							case 94: // Quantize End
+								for (byte a=0; a<16; a++){
+									for (byte b=0; b<8; b++){
+										for (byte c=0; c<16; c++){
 											noteEnd[channelView][a][b][c] = 1;
 										}
 									}
 								}
+								break;
+							case 95: // Set Note Start for 8
+								if (isPlay == LOW){
+									for (byte c=0; c<128; c++){
+										trellis.clrLED(c);
+									}
+									for (byte c=0; c<8; c++){
+										trellis.setLED(hardwareMatrix[c][0]);
+									}
+									trellis.writeDisplay();
+									noteStart8a = HIGH;
+								}
+								break;
+							case 108: // Set Note Start for All
+								if (isPlay == LOW){
+									for (byte c=0; c<128; c++){
+										trellis.setLED(funtionMatrix1[c]);
+									}
+									trellis.writeDisplay();
+									noteStart127a = HIGH;
+								}
+								break;
+							case 109: // Set Note Start for Channel
+								if (isPlay == LOW){
+									for (byte c=0; c<128; c++){
+										trellis.clrLED(c);
+									}
+									for (byte c=noteStart[channelView][pageView[channelView]][0][0];c<=noteLength[channelView]-noteEnd[channelView][pageView[channelView]][0][0];c++){
+										trellis.setLED(funtionMatrix1[c]);
+									}
+									trellis.writeDisplay();
+									noteStartChannel = HIGH;
+								}
+								break;
+							case 110: // Set Note End for 8
+								if (isPlay == LOW){
+									for (byte c=0; c<128; c++){
+										trellis.clrLED(c);
+									}
+									for (byte c=0; c<8; c++){
+										trellis.setLED(hardwareMatrix[c][0]);
+									}
+									trellis.writeDisplay();
+									noteEnd8a = HIGH;
+								}
+								break;
+							case 111: // Set Note End for All
+								if (isPlay == LOW){
+									for (byte c=0; c<128; c++){
+										trellis.setLED(funtionMatrix1[c]);
+									}
+									trellis.writeDisplay();
+									noteEnd127a = HIGH;
+								}
+								break;
+							case 60: // Set Note End for Channel
+								if (isPlay == LOW){
+									for (byte c=0; c<128; c++){
+										trellis.clrLED(c);
+									}
+									for (byte c=noteStart[channelView][pageView[channelView]][0][0];c<=noteLength[channelView]-noteEnd[channelView][pageView[channelView]][0][0];c++){
+										trellis.setLED(funtionMatrix1[c]);
+									}
+									trellis.writeDisplay();
+									noteEndChannel = HIGH;
+								}
+								break;
+							case 61: // Set mooveIn
+								mooveIn = !mooveIn;
+								functionView();
 								break;
 						}
 					}
@@ -1201,6 +1599,24 @@ void loop(){
 							noteOnVoid(liveNotes[funtionMatrix2[z]] + liveLowerNote[channelView], 100, channelView);
 							if (isPlay == HIGH && playLiveTest == LOW){
 								liveIsPressed[liveNotes[funtionMatrix2[z]] + liveLowerNote[channelView]] = 100;
+								for (eightRows=0; eightRows<8; eightRows++){
+									if (notePitch[channelView][pagePlay[channelView]][eightRows][steps[channelView]] == liveNotes[funtionMatrix2[z]] + liveLowerNote[channelView] && softwareMatrix[channelView][pagePlay[channelView]][hardwareMatrix[eightRows][steps[channelView]]] == HIGH){
+										freeLiveNotes = LOW;
+									}
+								}
+								if (freeLiveNotes == HIGH){
+									for (eightRows=0; eightRows<8; eightRows++){
+										if (softwareMatrix[channelView][pagePlay[channelView]][hardwareMatrix[eightRows][steps[channelView]]] == LOW){
+											noteStart[channelView][pagePlay[channelView]][eightRows][steps[channelView]] = (beatClockCounter + noteLength[channelView] - 1) % noteLength[channelView];
+											noteOnTrigger[channelView][pagePlay[channelView]][hardwareMatrix[eightRows][steps[channelView]]] = HIGH;
+											softwareMatrix[channelView][pagePlay[channelView]][hardwareMatrix[eightRows][steps[channelView]]] = HIGH;
+											notePitch[channelView][pagePlay[channelView]][eightRows][steps[channelView]] = liveNotes[funtionMatrix2[z]] + liveLowerNote[channelView];
+											noteVolume[channelView][pagePlay[channelView]][eightRows][steps[channelView]] = 100;
+											noteOnVolume[liveNotes[funtionMatrix2[z]] + liveLowerNote[channelView]] = 100;
+											break;
+										}
+									}
+								}
 							}
 						}
 					}
@@ -1208,7 +1624,31 @@ void loop(){
 						if (liveNotes[funtionMatrix2[z]] != 50){
 							noteOffVoid(liveNotes[funtionMatrix2[z]] + liveLowerNote[channelView], channelView);
 							if (isPlay == HIGH && playLiveTest == LOW){
-								liveIsUnPressed[liveNotes[funtionMatrix2[z]] + liveLowerNote[channelView]] = HIGH;
+								//liveIsUnPressed[liveNotes[funtionMatrix2[z]] + liveLowerNote[channelView]] = HIGH;
+								liveIsPressed[liveNotes[funtionMatrix2[z]] + liveLowerNote[channelView]] = 0;
+								for (eightRows=0; eightRows<8; eightRows++){
+									if (notePitch[channelView][pagePlay[channelView]][eightRows][steps[channelView]] == liveNotes[funtionMatrix2[z]] + liveLowerNote[channelView] && softwareMatrix[channelView][pagePlay[channelView]][hardwareMatrix[eightRows][steps[channelView]]] == HIGH){
+										freeLiveNotes = LOW;
+									}
+								}
+								if (freeLiveNotes == HIGH){
+									for (eightRows=0; eightRows<8; eightRows++){
+										if (softwareMatrix[channelView][pagePlay[channelView]][hardwareMatrix[eightRows][steps[channelView]]] == LOW){
+											softwareMatrix[channelView][pagePlay[channelView]][hardwareMatrix[eightRows][steps[channelView]]] = HIGH;
+											notePitch[channelView][pagePlay[channelView]][eightRows][steps[channelView]] = liveNotes[funtionMatrix2[z]] + liveLowerNote[channelView];
+											noteVolume[channelView][pagePlay[channelView]][eightRows][steps[channelView]] = noteOnVolume[liveNotes[funtionMatrix2[z]] + liveLowerNote[channelView]];
+											noteOnVolume[liveNotes[funtionMatrix2[z]] + liveLowerNote[channelView]] = 0;
+											break;
+										}
+									}
+								}
+								freeLiveNotes = HIGH;
+								for (eightRows=0; eightRows<8; eightRows++){
+									if(notePitch[channelView][pagePlay[channelView]][eightRows][steps[channelView]] == liveNotes[funtionMatrix2[z]] + liveLowerNote[channelView] && softwareMatrix[channelView][pagePlay[channelView]][hardwareMatrix[eightRows][steps[channelView]]] == HIGH){
+										noteEnd[channelView][pagePlay[channelView]][eightRows][steps[channelView]] = clock2[channelView] + noteLength[channelView] - beatClockCounter;
+										noteOffTrigger[channelView][pagePlay[channelView]][hardwareMatrix[eightRows][steps[channelView]]] = HIGH;
+									}
+								}
 							}
 						}
 					}
@@ -1237,52 +1677,68 @@ void loop(){
 				}
 				trellis.writeDisplay();
 				function = LOW;
-				notePitch81 = LOW;
-				notePitch82 = LOW;
-				notePitchAll1 = LOW;
-				notePitchAll2 = LOW;
-				volumeValue81 = LOW;
-				volumeValue82 = LOW;
-				volumeValueAll1 = LOW;
-				volumeValueAll2 = LOW;
+				notePitch8a = LOW;
+				notePitch8b = LOW;
+				notePitch127a = LOW;
+				notePitch127b = LOW;
+				noteVolume8a = LOW;
+				noteVolume8b = LOW;
+				noteVolume127a = LOW;
+				noteVolume127b = LOW;
 				setPattern1 = LOW;
 				setPattern2 = LOW;
-				setMuteSolo = LOW;
-				//soloEdit = LOW;
+				setMute = LOW;
 				setBPM = LOW;
 				setLatency = LOW;
 				setLatencyChannel = LOW;
-				copyPage1 = LOW;
+				//setNoteOn = LOW;
+				setNoteOff = LOW;
+				setLongNotes = LOW;
+				copyPage = LOW;
 				playLive = LOW;
 				playLiveTest = LOW;
+				monoStepRecord = LOW;
+				noteStart8a = LOW;
+				noteStart8b = LOW;
+				noteStart127a = LOW;
+				noteStart127b = LOW;
+				noteStartChannel = LOW;
+				noteEnd8a = LOW;
+				noteEnd8b = LOW;
+				noteEnd127a = LOW;
+				noteEnd127b = LOW;
+				noteEndChannel = LOW;
+				stepRecordStep = 0;
 			}
 		}
 	}
-	for (byte i=0; i<channelCount; i++){
-		for (byte y=0; y<8; y++){
-			if (playLater[i][y] == HIGH) {
-				if (millis() - playLaterMillis[i][y] > latency[i]){
-					noteOnVoid(playLaterNotePitch[i][y], playLaterVolumeValue[i][y], i);
-					playLater[i][y] = LOW;
+	if (isPlay == HIGH){
+		for (byte i=0; i<channelCount; i++){
+			for (byte y=0; y<8; y++){
+				if (playLater[i][y] == HIGH) {
+					if (millis() - playLaterMillis[i][y] > latency[i]){
+						noteOnVoid(playLaterNotePitch[i][y], playLaternoteVolume[i][y], i);
+						playLater[i][y] = LOW;
+					}
 				}
-			}
-			if (playLaterOff[i][y] == HIGH) {
-				if (millis() - playLaterOffMillis[i][y] > latency[i]){
-					noteOffVoid(playLaterOffNote[i][y], i);
-					playLaterOff[i][y] = LOW;
+				if (playLaterOff[i][y] == HIGH) {
+					if (millis() - playLaterOffMillis[i][y] > latency[i]){
+						noteOffVoid(playLaterOffNote[i][y], i);
+						playLaterOff[i][y] = LOW;
+					}
 				}
 			}
 		}
 	}
 	if (isInternal == HIGH && isPlay == HIGH) {
-		clockIntervall = 60.0/BPM*1000*1000/24.0;
-		if (micros() > makeClock1){
-			makeClock1 = makeClock1 + clockIntervall;
+		if (micros() >= makeClock2){
+			clockCounter++;
+			makeClock2 = makeClock1 + (clockIntervall * clockCounter);
 			beatClock(CLOCK);
 		}
 	}
 	if (isInternal == LOW && isClock == HIGH) {
-		if((millis() - clockTime > clockDebounce)){ //Wenn Pause ist
+		if((millis() - clockTime > clockDebounce)){ //If the external clock stopped
 			stopPlay();
 		}
 	}
@@ -1294,6 +1750,11 @@ void loop(){
 			if (isPlay == LOW){
 				stopPlay();
 				//digitalWrite(led, LOW);
+			} else {
+				makeClock1 = micros();
+				clockCounter++;
+				makeClock2 = makeClock1 + (clockIntervall * clockCounter);
+				beatClock(CLOCK);
 			}
 		}
 	}
@@ -1324,12 +1785,48 @@ void loop(){
 					if (freeLiveNotes == HIGH){
 						for (eightRows=0; eightRows<8; eightRows++){
 							if (softwareMatrix[channelView][pagePlay[channelView]][hardwareMatrix[eightRows][steps[channelView]]] == LOW){
-								noteStart[channelView][pageView[channelView]][eightRows][steps[channelView]] = (beatClockCounter + noteLength[channelView] - 1) % noteLength[channelView];
+								noteStart[channelView][pagePlay[channelView]][eightRows][steps[channelView]] = (beatClockCounter + noteLength[channelView] - 1) % noteLength[channelView];
+								noteOnTrigger[channelView][pagePlay[channelView]][hardwareMatrix[eightRows][steps[channelView]]] = HIGH;
+								softwareMatrix[channelView][pagePlay[channelView]][hardwareMatrix[eightRows][steps[channelView]]] = HIGH;
+								notePitch[channelView][pagePlay[channelView]][eightRows][steps[channelView]] = dataByte1;
+								noteVolume[channelView][pagePlay[channelView]][eightRows][steps[channelView]] = dataByte2;
+								noteOnVolume[dataByte1] = dataByte2;
+								break;
 							}
 						}
 					}
 					freeLiveNotes = HIGH;
 					//liveRecordPressed(dataByte1, dataByte2);
+				}
+				if (monoStepRecord == HIGH){
+					for (eightRows=0; eightRows<8; eightRows++){
+						if (softwareMatrix[channelView][pagePlay[channelView]][hardwareMatrix[eightRows][stepRecordStep]] == LOW){
+							noteOnTrigger[channelView][pageView[channelView]][hardwareMatrix[eightRows][stepRecordStep]] = HIGH;
+							noteOffTrigger[channelView][pageView[channelView]][hardwareMatrix[eightRows][stepRecordStep]] = HIGH;
+							softwareMatrix[channelView][pageView[channelView]][hardwareMatrix[eightRows][stepRecordStep]] = HIGH;
+							notePitch[channelView][pageView[channelView]][eightRows][stepRecordStep] = dataByte1;
+							noteVolume[channelView][pageView[channelView]][eightRows][stepRecordStep] = dataByte2;
+							break;
+						}
+					}
+					stepRecordStep++;
+					if (stepRecordStep == 16){
+						stepRecordStep = 0;
+						for (int i=0; i<256; i++){
+							if (pageActive[channelView][pageChange[i][pageView[channelView]]] == HIGH) {
+								pageView[channelView] = pageChange[i][pageView[channelView]];
+								break;
+							}
+						}
+					}
+					for (byte c=0; c<128; c++){
+						trellis.clrLED(c);
+					}
+					for (byte x=0; x<=stepRecordStep; x++){
+						trellis.setLED(hardwareMatrix[0][x]);
+					}
+					trellis.setLED(hardwareMatrix[7][3]);
+					trellis.writeDisplay();
 				}
 				break;
 			case midi::NoteOff:
@@ -1337,7 +1834,8 @@ void loop(){
 				dataByte2 = MIDIInput.getData2();
 				noteOffVoid(dataByte1, channelView);
 				if (isPlay == HIGH && playLiveTest == LOW && playLive == HIGH){
-					liveIsUnPressed[dataByte1] = HIGH;
+					liveIsPressed[dataByte1] = 0;
+					//liveIsUnPressed[dataByte1] = HIGH;
 					for (eightRows=0; eightRows<8; eightRows++){
 						if (notePitch[channelView][pagePlay[channelView]][eightRows][steps[channelView]] == dataByte1 && softwareMatrix[channelView][pagePlay[channelView]][hardwareMatrix[eightRows][steps[channelView]]] == HIGH){
 							freeLiveNotes = LOW;
@@ -1346,11 +1844,21 @@ void loop(){
 					if (freeLiveNotes == HIGH){
 						for (eightRows=0; eightRows<8; eightRows++){
 							if (softwareMatrix[channelView][pagePlay[channelView]][hardwareMatrix[eightRows][steps[channelView]]] == LOW){
-								noteEnd[channelView][pageView[channelView]][eightRows][steps[channelView]] = clock2[channelView] + noteLength[channelView] - beatClockCounter;
+								softwareMatrix[channelView][pagePlay[channelView]][hardwareMatrix[eightRows][steps[channelView]]] = HIGH;
+								notePitch[channelView][pagePlay[channelView]][eightRows][steps[channelView]] = dataByte1;
+								noteVolume[channelView][pagePlay[channelView]][eightRows][steps[channelView]] = noteOnVolume[dataByte1];
+								noteOnVolume[dataByte1] = 0;
+								break;
 							}
 						}
 					}
 					freeLiveNotes = HIGH;
+					for (eightRows=0; eightRows<8; eightRows++){
+						if(notePitch[channelView][pagePlay[channelView]][eightRows][steps[channelView]] == dataByte1 && softwareMatrix[channelView][pagePlay[channelView]][hardwareMatrix[eightRows][steps[channelView]]] == HIGH){
+							noteEnd[channelView][pagePlay[channelView]][eightRows][steps[channelView]] = clock2[channelView] + noteLength[channelView] - beatClockCounter;
+							noteOffTrigger[channelView][pagePlay[channelView]][hardwareMatrix[eightRows][steps[channelView]]] = HIGH;
+						}
+					}
 					//liveRecordUnPressed(dataByte1);
 				}
 				break;
@@ -1371,64 +1879,102 @@ void beatClock(byte realtimebyte){
 		clockTime = millis();
 		beatClockCounter++;
 		channelPlay2 = 0;
-		for(byte i = 0; i < 16; i++) latencyPlay[i] = latency[i];
-		if (beatClockCounter == 25){beatClockCounter = 1;}		 //Eine Viertelnote ist vorbei
+		for(byte i=0; i<16; i++) latencyPlay[i] = latency[i];
+		if (beatClockCounter == 49){beatClockCounter = 1;}		 //Eine Viertelnote ist vorbei
 		for (channelPlay1 = 0; channelPlay1<channelCount; channelPlay1++){
-			if (latencyPlay[channelPlay1] == min(latencyPlay[0], min(latencyPlay[1], min(latencyPlay[2], min(latencyPlay[3], latencyPlay[4]))))) {
+			if (latencyPlay[channelPlay1] == min(latencyPlay[0], min(latencyPlay[1], min(latencyPlay[2], min(latencyPlay[3], min(latencyPlay[4], min(latencyPlay[5], min(latencyPlay[6], min(latencyPlay[7], min(latencyPlay[8], min(latencyPlay[9], min(latencyPlay[10], latencyPlay[11])))))))))))) {
+				mooveInCounter[channelPlay1]++;
+				if (mooveInCounter[channelPlay1] == noteLength[channelPlay1] * (tripletStep[noteTriplet[channelPlay1]]+1)){
+					mooveInCounter[channelPlay1] = 0;
+					if (mooveInChannel[channelPlay1] == HIGH){
+						mooveInChannel[channelPlay1] = LOW;
+					}
+				}
 				beatClock2(channelPlay1);
 				latencyPlay[channelPlay1] = 500;
 				channelPlay2++;
 				channelPlay1 = -1;
 			}
 			if (channelPlay2 == channelCount) {
-				channelPlay1 = channelCount+10;
+				break;
 			}
 		}
 	}
 }
 /*if (latencyPlay[channelPlay1] == min(latencyPlay[0], min(latencyPlay[1], min(latencyPlay[2], min(latencyPlay[3], min(latencyPlay[4], min(latencyPlay[5], min(latencyPlay[6], min(latencyPlay[7], min(latencyPlay[8], min(latencyPlay[9], min(latencyPlay[10], min(latencyPlay[11], min(latencyPlay[12], min(latencyPlay[13], min(latencyPlay[14], latencyPlay[15])))))))))))))))) {*/
 void beatClock2(byte channelPlay){
+	if (steps[channelPlay] == tripletStep[noteTriplet[channelPlay]] && beatClockCounter == 1){
+		if (mooveIn == HIGH && channelActive[channelPlay] == LOW){
+			
+		} else {
+			if (mooveInChannel[channelPlay] == HIGH){
+				mooveInChannel[channelPlay] = LOW;
+			}
+			for (int i=0; i<256; i++){
+				if (pageActive[channelPlay][pageChange[i][pagePlay[channelPlay]]] == HIGH) {
+					if (pagePlay[channelPlay] == pageView[channelPlay]){
+						pageView[channelPlay] = pageChange[i][pageView[channelPlay]];
+					}
+					pagePlay[channelPlay] = pageChange[i][pagePlay[channelPlay]];
+					break;
+				}
+			}
+			if (channelPlay == channelView && function == HIGH && notePitch8a == LOW && notePitch8b == LOW && notePitch127a == LOW && notePitch127b == LOW && noteVolume8a == LOW && noteVolume8b == LOW && noteVolume127a == LOW && noteVolume127b == LOW && setPattern1 == LOW && setPattern2 == LOW && setMute == LOW && setBPM == LOW && setLatency == LOW && setLatencyChannel == LOW && setLongNotes == LOW && setNoteOff == LOW && copyPage == LOW && playLive == LOW && playLiveTest == LOW && noteStart8a == LOW && noteStart8b == LOW && noteStart127a == LOW && noteStart127b == LOW && noteStartChannel == LOW && noteEnd8a == LOW && noteEnd8b == LOW && noteEnd127a == LOW && noteEnd127b == LOW && noteEndChannel == LOW){
+				for (byte i=0; i<16; i++){
+					trellis.clrLED(hardwareMatrix[1][i]);
+					trellis.clrLED(hardwareMatrix[2][i]);
+					trellis.clrLED(hardwareMatrix[3][i]);
+					trellis.clrLED(hardwareMatrix[4][i]);
+				}
+				for (int x=0; x<256; x++){
+					if (pageView[channelView] == x){
+						trellis.setLED(hardwareMatrix[1][x%16]);
+						trellis.setLED(hardwareMatrix[3][x/16]);
+					}
+					if (pageActive[channelView][x]==HIGH){
+						if (pageView[channelView]/16 == x/16){
+							trellis.setLED(hardwareMatrix[2][x%16]);
+						}
+						trellis.setLED(hardwareMatrix[4][x/16]);
+					}
+				}
+				trellis.writeDisplay();
+			}
+		}
+	}
 	for (byte i=0; i<16; i++){
 		if (pageActive[channelPlay][pageChange[i][pagePlay[channelPlay]]] == HIGH){
 			pageNext = i;
-			i = 17;
+			break;
 		}
 	}
-	for (byte i=pagePlay[channelPlay] - 1; i<16 && i>=0; i--){
+	for (int i=pagePlay[channelPlay] - 1; i<256 && i>=0; i--){
 		if (pageActive[channelPlay][i] == HIGH){
 			pagePre = i;
-			i = 17;
+			break;
 		}
 	}
-	for (byte i=0; i<16; i++){
+	for (int i=0; i<256; i++){
 		if (pageActive[channelPlay][i] == HIGH){
 			pageFirst = i;
-			i = 17;
+			break;
 		}
 	}
-	for (byte i=15; i<16 && i>=0; i--){
+	for (int i=15; i<256 && i>=0; i--){
 		if (pageActive[channelPlay][i] == HIGH){
 			pageLast = i;
-			i = 17;
+			break;
 		}
 	}
 	if ((beatClockCounter + noteLength[channelPlay] - 1) % noteLength[channelPlay] == 0){
 		clock2[channelPlay] = beatClockCounter;
-		if (noteTriplet[channelPlay] == LOW){
-			if (steps[channelPlay] < 15){
-				steps[channelPlay]++;
-			} else {
-				steps[channelPlay] = 0;
-			}
+		if (steps[channelPlay] < tripletStep[noteTriplet[channelPlay]]){
+			steps[channelPlay]++;
 		} else {
-			if (steps[channelPlay] < 11){
-				steps[channelPlay]++;
-			} else {
-				steps[channelPlay] = 0;
-			}
+			steps[channelPlay] = 0;
 		}
 		if (function == LOW && channelPlay == channelView && pagePlay[channelPlay] == pageView[channelPlay]){
-				for (byte i=0; i<128; i++){
+			for (byte i=0; i<128; i++){
 				if (softwareMatrix[channelView][pageView[channelView]][i] == LOW){
 					trellis.clrLED(i);
 				} else {
@@ -1445,50 +1991,50 @@ void beatClock2(byte channelPlay){
 			trellis.writeDisplay();
 		}
 	}
-	if (channelActive[channelPlay] == HIGH){
+	if (channelActive[channelPlay] == HIGH && mooveInChannel[channelPlay] == LOW){
 		for (eightRows=0; eightRows<8; eightRows++){
-			if (pageActive[channelPlay][pagePlay[channelPlay]] == HIGH && muteSoloRow[channelPlay][eightRows][0] == LOW && autoMuteRow[channelPlay][eightRows] == LOW){
-				if (softwareMatrix[channelPlay][pagePlay[channelPlay]][hardwareMatrix[eightRows][steps[channelPlay]]] == HIGH){	
+			if (pageActive[channelPlay][pagePlay[channelPlay]] == HIGH && mute[eightRows][channelPlay] == LOW){
+				if (softwareMatrix[channelPlay][pagePlay[channelPlay]][hardwareMatrix[eightRows][steps[channelPlay]]] == HIGH && (noteOnTrigger[channelPlay][pagePlay[channelPlay]][hardwareMatrix[eightRows][steps[channelPlay]]] == HIGH || startNote[channelPlay][pagePlay[channelPlay]][eightRows] == HIGH)){	
 					if ((beatClockCounter + noteLength[channelPlay] - 1) % noteLength[channelPlay] == noteStart[channelPlay][pagePlay[channelPlay]][eightRows][steps[channelPlay]]){
 						if (longNotes[channelPlay] == LOW){
-							note[channelPlay][hardwareMatrix[eightRows][steps[channelPlay]]] = HIGH;
 							if (latency[channelPlay] == 0){
-								noteOnVoid(notePitch[channelPlay][pagePlay[channelPlay]][eightRows][steps[channelPlay]],volumeValue[channelPlay][pagePlay[channelPlay]][eightRows][steps[channelPlay]],channelPlay);
+								noteOnVoid(notePitch[channelPlay][pagePlay[channelPlay]][eightRows][steps[channelPlay]],noteVolume[channelPlay][pagePlay[channelPlay]][eightRows][steps[channelPlay]],channelPlay);
+								startNote[channelPlay][pagePlay[channelPlay]][eightRows] = LOW;
 							} else {
 								playLater[channelPlay][eightRows] = HIGH;
 								playLaterMillis[channelPlay][eightRows] = millis();
 								playLaterNotePitch[channelPlay][eightRows] = notePitch[channelPlay][pagePlay[channelPlay]][eightRows][steps[channelPlay]];
-								playLaterVolumeValue[channelPlay][eightRows] = volumeValue[channelPlay][pagePlay[channelPlay]][eightRows][steps[channelPlay]];
+								playLaternoteVolume[channelPlay][eightRows] = noteVolume[channelPlay][pagePlay[channelPlay]][eightRows][steps[channelPlay]];
 							}
 						} else if ((softwareMatrix[channelPlay][pagePlay[channelPlay]][hardwareMatrix[eightRows][steps[channelPlay]-1]] == LOW || notePitch[channelPlay][pagePlay[channelPlay]][eightRows][steps[channelPlay]-1] != notePitch[channelPlay][pagePlay[channelPlay]][eightRows][steps[channelPlay]]) && steps[channelPlay] > 0){
-							note[channelPlay][hardwareMatrix[eightRows][steps[channelPlay]]] = HIGH;
 							if (latency[channelPlay] == 0){
-								noteOnVoid(notePitch[channelPlay][pagePlay[channelPlay]][eightRows][steps[channelPlay]],volumeValue[channelPlay][pagePlay[channelPlay]][eightRows][steps[channelPlay]],channelPlay);
+								noteOnVoid(notePitch[channelPlay][pagePlay[channelPlay]][eightRows][steps[channelPlay]],noteVolume[channelPlay][pagePlay[channelPlay]][eightRows][steps[channelPlay]],channelPlay);
+								startNote[channelPlay][pagePlay[channelPlay]][eightRows] = LOW;
 							} else {
 								playLater[channelPlay][eightRows] = HIGH;
 								playLaterMillis[channelPlay][eightRows] = millis();
 								playLaterNotePitch[channelPlay][eightRows] = notePitch[channelPlay][pagePlay[channelPlay]][eightRows][steps[channelPlay]];
-								playLaterVolumeValue[channelPlay][eightRows] = volumeValue[channelPlay][pagePlay[channelPlay]][eightRows][steps[channelPlay]];
+								playLaternoteVolume[channelPlay][eightRows] = noteVolume[channelPlay][pagePlay[channelPlay]][eightRows][steps[channelPlay]];
 							}
 						} else if ((softwareMatrix[channelPlay][pagePre][hardwareMatrix[eightRows][15]] == LOW || notePitch[channelPlay][pagePre][eightRows][15] != notePitch[channelPlay][pagePlay[channelPlay]][eightRows][steps[channelPlay]]) && steps[channelPlay] == 0 && pagePlay[channelPlay] > pageFirst){
-							note[channelPlay][hardwareMatrix[eightRows][steps[channelPlay]]] = HIGH;
 							if (latency[channelPlay] == 0){
-								noteOnVoid(notePitch[channelPlay][pagePlay[channelPlay]][eightRows][steps[channelPlay]],volumeValue[channelPlay][pagePlay[channelPlay]][eightRows][steps[channelPlay]],channelPlay);
+								noteOnVoid(notePitch[channelPlay][pagePlay[channelPlay]][eightRows][steps[channelPlay]],noteVolume[channelPlay][pagePlay[channelPlay]][eightRows][steps[channelPlay]],channelPlay);
+								startNote[channelPlay][pagePlay[channelPlay]][eightRows] = LOW;
 							} else {
 								playLater[channelPlay][eightRows] = HIGH;
 								playLaterMillis[channelPlay][eightRows] = millis();
 								playLaterNotePitch[channelPlay][eightRows] = notePitch[channelPlay][pagePlay[channelPlay]][eightRows][steps[channelPlay]];
-								playLaterVolumeValue[channelPlay][eightRows] = volumeValue[channelPlay][pagePlay[channelPlay]][eightRows][steps[channelPlay]];
+								playLaternoteVolume[channelPlay][eightRows] = noteVolume[channelPlay][pagePlay[channelPlay]][eightRows][steps[channelPlay]];
 							}
 						} else if ((softwareMatrix[channelPlay][15][hardwareMatrix[eightRows][pageLast]] == LOW || notePitch[channelPlay][pageLast][eightRows][15] != notePitch[channelPlay][pagePlay[channelPlay]][eightRows][steps[channelPlay]]) && steps[channelPlay] == 0 && pagePlay[channelPlay] == pageFirst){
-							note[channelPlay][hardwareMatrix[eightRows][steps[channelPlay]]] = HIGH;
 							if (latency[channelPlay] == 0){
-								noteOnVoid(notePitch[channelPlay][pagePlay[channelPlay]][eightRows][steps[channelPlay]],volumeValue[channelPlay][pagePlay[channelPlay]][eightRows][steps[channelPlay]],channelPlay);
+								noteOnVoid(notePitch[channelPlay][pagePlay[channelPlay]][eightRows][steps[channelPlay]],noteVolume[channelPlay][pagePlay[channelPlay]][eightRows][steps[channelPlay]],channelPlay);
+								startNote[channelPlay][pagePlay[channelPlay]][eightRows] = LOW;
 							} else {
 								playLater[channelPlay][eightRows] = HIGH;
 								playLaterMillis[channelPlay][eightRows] = millis();
 								playLaterNotePitch[channelPlay][eightRows] = notePitch[channelPlay][pagePlay[channelPlay]][eightRows][steps[channelPlay]];
-								playLaterVolumeValue[channelPlay][eightRows] = volumeValue[channelPlay][pagePlay[channelPlay]][eightRows][steps[channelPlay]];
+								playLaternoteVolume[channelPlay][eightRows] = noteVolume[channelPlay][pagePlay[channelPlay]][eightRows][steps[channelPlay]];
 							}
 						}
 					}
@@ -1496,7 +2042,7 @@ void beatClock2(byte channelPlay){
 			}
 		}
 	}
-	if (channelActive[channelPlay] == HIGH){
+	if (channelActive[channelPlay] == HIGH && mooveInChannel[channelPlay] == LOW){
 		if(beatClockCounter == clock2[channelPlay] + noteLength[channelPlay] - 1){
 			freeLiveNotes = HIGH;
 			for (byte i=0; i<128; i++){
@@ -1504,20 +2050,20 @@ void beatClock2(byte channelPlay){
 					liveRecord(i, liveIsPressed[i]);
 				}
 			}
-			for (byte i=0; i<128; i++){
+			/*for (byte i=0; i<128; i++){
 				if (liveIsUnPressed[i] == HIGH){
 					liveIsPressed[i] = 0;
 					liveIsUnPressed[i] = LOW;
 				}
-			}
+			}*/
 		}
 	}
-		for (eightRows=0; eightRows<8; eightRows++){
-			if (pageActive[channelPlay][pagePlay[channelPlay]] == HIGH && muteSoloRow[channelPlay][eightRows][0] == LOW){
-				if (softwareMatrix[channelPlay][pagePlay[channelPlay]][hardwareMatrix[eightRows][steps[channelPlay]]] == HIGH){
+	for (eightRows=0; eightRows<8; eightRows++){
+		if (pageActive[channelPlay][pagePlay[channelPlay]] == HIGH){
+			if (mute[eightRows][channelPlay] == LOW || noteStop[channelPlay][notePitch[channelPlay][pagePlay[channelPlay]][eightRows][steps[channelPlay]]] == HIGH){
+				if (softwareMatrix[channelPlay][pagePlay[channelPlay]][hardwareMatrix[eightRows][steps[channelPlay]]] == HIGH && noteOffTrigger[channelPlay][pagePlay[channelPlay]][hardwareMatrix[eightRows][steps[channelPlay]]] == HIGH){
 					if (beatClockCounter == clock2[channelPlay] + noteLength[channelPlay] - noteEnd[channelPlay][pagePlay[channelPlay]][eightRows][steps[channelPlay]]){
 						if (longNotes[channelPlay] == LOW){
-								note[channelPlay][hardwareMatrix[eightRows][steps[channelPlay]]] = LOW;
 								if (latency[channelPlay] == 0){
 									noteOffVoid(notePitch[channelPlay][pagePlay[channelPlay]][eightRows][steps[channelPlay]],channelPlay);
 								} else {
@@ -1529,7 +2075,6 @@ void beatClock2(byte channelPlay){
 							
 						} else {
 							if ((softwareMatrix[channelPlay][pagePlay[channelPlay]][hardwareMatrix[eightRows][steps[channelPlay]+1]] == LOW || notePitch[channelPlay][pagePlay[channelPlay]][eightRows][steps[channelPlay]+1] != notePitch[channelPlay][pagePlay[channelPlay]][eightRows][steps[channelPlay]]) && steps[channelPlay] < 15){
-								note[channelPlay][hardwareMatrix[eightRows][steps[channelPlay]]] = LOW;
 								if (latency[channelPlay] == 0){
 									noteOffVoid(notePitch[channelPlay][pagePlay[channelPlay]][eightRows][steps[channelPlay]],channelPlay);
 								} else {
@@ -1538,7 +2083,6 @@ void beatClock2(byte channelPlay){
 									playLaterOffNote[channelPlay][eightRows] = notePitch[channelPlay][pagePlay[channelPlay]][eightRows][steps[channelPlay]];
 								}
 							} else if ((softwareMatrix[channelPlay][pageNext][hardwareMatrix[eightRows][0]] == LOW || notePitch[channelPlay][pageNext][eightRows][0] != notePitch[channelPlay][pagePlay[channelPlay]][eightRows][steps[channelPlay]]) && steps[channelPlay] == 15 && pagePlay[channelPlay] < pageLast){
-								note[channelPlay][hardwareMatrix[eightRows][steps[channelPlay]]] = LOW;
 								if (latency[channelPlay] == 0){
 									noteOffVoid(notePitch[channelPlay][pagePlay[channelPlay]][eightRows][steps[channelPlay]],channelPlay);
 								} else {
@@ -1547,7 +2091,6 @@ void beatClock2(byte channelPlay){
 									playLaterOffNote[channelPlay][eightRows] = notePitch[channelPlay][pagePlay[channelPlay]][eightRows][steps[channelPlay]];
 								}
 							} else if ((softwareMatrix[channelPlay][0][hardwareMatrix[eightRows][pageFirst]] == LOW || notePitch[channelPlay][pageFirst][eightRows][0] != notePitch[channelPlay][pagePlay[channelPlay]][eightRows][steps[channelPlay]]) && steps[channelPlay] == 15 && pagePlay[channelPlay] == pageLast){
-								note[channelPlay][hardwareMatrix[eightRows][steps[channelPlay]]] = LOW;
 								if (latency[channelPlay] == 0){
 									noteOffVoid(notePitch[channelPlay][pagePlay[channelPlay]][eightRows][steps[channelPlay]],channelPlay);
 								} else {
@@ -1559,16 +2102,6 @@ void beatClock2(byte channelPlay){
 						}
 					}
 				}
-			}
-		}
-	if (steps[channelPlay] == 15 && beatClockCounter == 24){
-		for (byte i=0; i<16; i++){
-			if (pageActive[channelPlay][pageChange[i][pagePlay[channelPlay]]] == HIGH) {
-				if (pagePlay[channelPlay] == pageView[channelPlay]){
-					pageView[channelPlay] = pageChange[i][pageView[channelPlay]];
-				}
-				pagePlay[channelPlay] = pageChange[i][pagePlay[channelPlay]];
-				i = 17;
 			}
 		}
 	}
@@ -1597,36 +2130,49 @@ void functionView(){
 	}
 	if (isInternal == HIGH){
 		trellis.setLED(hardwareMatrix[0][11]);
-	} else {
-		trellis.clrLED(hardwareMatrix[0][11]);
 	}
 	trellis.setLED(hardwareMatrix[0][12]);
 	trellis.setLED(hardwareMatrix[0][13]);
-	for (byte x=0; x<16; x++){
+	trellis.setLED(hardwareMatrix[0][14]);
+	if (longNotes[channelView] == HIGH){
+		trellis.setLED(hardwareMatrix[0][15]);
+	}
+	for (int x=0; x<256; x++){
 		if (pageView[channelView] == x){
-			trellis.setLED(hardwareMatrix[1][x]);
+			trellis.setLED(hardwareMatrix[1][x%16]);
+			trellis.setLED(hardwareMatrix[3][x/16]);
 		}
 	}
-	for (byte x=0; x<16; x++){
+	for (int x=0; x<256; x++){
 		if (pageActive[channelView][x]==HIGH){
-			trellis.setLED(hardwareMatrix[2][x]);
+			if (pageView[channelView]/16 == x/16){
+				trellis.setLED(hardwareMatrix[2][x%16]);
+			}
+			trellis.setLED(hardwareMatrix[4][x/16]);
 		}
 	}
 	for (byte x=0; x<channelCount; x++){
 		if (channelView == x){
-			trellis.setLED(hardwareMatrix[3][x]);
-		}
-		if (channelActive[x] == HIGH){
-			trellis.setLED(hardwareMatrix[4][x]);
-		}
-		if (longNotes[x] == HIGH){
 			trellis.setLED(hardwareMatrix[5][x]);
 		}
+		if (channelActive[x] == HIGH){
+			trellis.setLED(hardwareMatrix[6][x]);
+		}
 	}
-	trellis.setLED(hardwareMatrix[6][0]);
 	trellis.setLED(hardwareMatrix[7][0]);
 	trellis.setLED(hardwareMatrix[7][1]);
 	trellis.setLED(hardwareMatrix[7][2]);
+	trellis.setLED(hardwareMatrix[7][3]);
+	trellis.setLED(hardwareMatrix[7][5]);
+	trellis.setLED(hardwareMatrix[7][6]);
+	trellis.setLED(hardwareMatrix[7][7]);
+	trellis.setLED(hardwareMatrix[7][8]);
+	trellis.setLED(hardwareMatrix[7][9]);
+	trellis.setLED(hardwareMatrix[7][10]);
+	trellis.setLED(hardwareMatrix[7][11]);
+	if (mooveIn == HIGH){
+		trellis.setLED(hardwareMatrix[7][12]);
+	}
 	trellis.writeDisplay();
 }
 void noteOffVoid(byte valueNoteOff,byte channelNoteOff){
@@ -1642,49 +2188,112 @@ void noteOffVoid(byte valueNoteOff,byte channelNoteOff){
 	}
 	switch (channelNoteOff) {
 		case 0:
-			MIDI1.write(noteSendOn);
-			MIDI1.write(valueNoteOff);
-			MIDI1.write(velocityZero);
+			MIDI01.write(noteSendOn);
+			MIDI01.write(valueNoteOff);
+			MIDI01.write(velocityZero);
 			
-			MIDI1.write(noteSendOff);
-			MIDI1.write(valueNoteOff);
-			MIDI1.write(velocityZero);
+			MIDI01.write(noteSendOff);
+			MIDI01.write(valueNoteOff);
+			MIDI01.write(velocityZero);
 			break;
 		case 1:
-			MIDI2.write(noteSendOn);
-			MIDI2.write(valueNoteOff);
-			MIDI2.write(velocityZero);
+			MIDI02.write(noteSendOn);
+			MIDI02.write(valueNoteOff);
+			MIDI02.write(velocityZero);
 			
-			MIDI2.write(noteSendOff);
-			MIDI2.write(valueNoteOff);
-			MIDI2.write(velocityZero);
+			MIDI02.write(noteSendOff);
+			MIDI02.write(valueNoteOff);
+			MIDI02.write(velocityZero);
 			break;
 		case 2:
-			MIDI3.write(noteSendOn);
-			MIDI3.write(valueNoteOff);
-			MIDI3.write(velocityZero);
+			MIDI03.write(noteSendOn);
+			MIDI03.write(valueNoteOff);
+			MIDI03.write(velocityZero);
 			
-			MIDI3.write(noteSendOff);
-			MIDI3.write(valueNoteOff);
-			MIDI3.write(velocityZero);
+			MIDI03.write(noteSendOff);
+			MIDI03.write(valueNoteOff);
+			MIDI03.write(velocityZero);
 			break;
 		case 3:
-			MIDI4.write(noteSendOn);
-			MIDI4.write(valueNoteOff);
-			MIDI4.write(velocityZero);
+			MIDI04.write(noteSendOn);
+			MIDI04.write(valueNoteOff);
+			MIDI04.write(velocityZero);
 			
-			MIDI4.write(noteSendOff);
-			MIDI4.write(valueNoteOff);
-			MIDI4.write(velocityZero);
+			MIDI04.write(noteSendOff);
+			MIDI04.write(valueNoteOff);
+			MIDI04.write(velocityZero);
 			break;
 		case 4:
-			MIDI5.write(noteSendOn);
-			MIDI5.write(valueNoteOff);
-			MIDI5.write(velocityZero);
+			MIDI05.write(noteSendOn);
+			MIDI05.write(valueNoteOff);
+			MIDI05.write(velocityZero);
 			
-			MIDI5.write(noteSendOff);
-			MIDI5.write(valueNoteOff);
-			MIDI5.write(velocityZero);
+			MIDI05.write(noteSendOff);
+			MIDI05.write(valueNoteOff);
+			MIDI05.write(velocityZero);
+			break;
+		case 5:
+			MIDI06.write(noteSendOn);
+			MIDI06.write(valueNoteOff);
+			MIDI06.write(velocityZero);
+			
+			MIDI06.write(noteSendOff);
+			MIDI06.write(valueNoteOff);
+			MIDI06.write(velocityZero);
+			break;
+		case 6:
+			MIDI07.write(noteSendOn);
+			MIDI07.write(valueNoteOff);
+			MIDI07.write(velocityZero);
+			
+			MIDI07.write(noteSendOff);
+			MIDI07.write(valueNoteOff);
+			MIDI07.write(velocityZero);
+			break;
+		case 7:
+			MIDI08.write(noteSendOn);
+			MIDI08.write(valueNoteOff);
+			MIDI08.write(velocityZero);
+			
+			MIDI08.write(noteSendOff);
+			MIDI08.write(valueNoteOff);
+			MIDI08.write(velocityZero);
+			break;
+		case 8:
+			MIDI09.write(noteSendOn);
+			MIDI09.write(valueNoteOff);
+			MIDI09.write(velocityZero);
+			
+			MIDI09.write(noteSendOff);
+			MIDI09.write(valueNoteOff);
+			MIDI09.write(velocityZero);
+			break;
+		case 9:
+			MIDI10.write(noteSendOn);
+			MIDI10.write(valueNoteOff);
+			MIDI10.write(velocityZero);
+			
+			MIDI10.write(noteSendOff);
+			MIDI10.write(valueNoteOff);
+			MIDI10.write(velocityZero);
+			break;
+		case 10:
+			MIDI11.write(noteSendOn);
+			MIDI11.write(valueNoteOff);
+			MIDI11.write(velocityZero);
+			
+			MIDI11.write(noteSendOff);
+			MIDI11.write(valueNoteOff);
+			MIDI11.write(velocityZero);
+			break;
+		case 11:
+			MIDI12.write(noteSendOn);
+			MIDI12.write(valueNoteOff);
+			MIDI12.write(velocityZero);
+			
+			MIDI12.write(noteSendOff);
+			MIDI12.write(valueNoteOff);
+			MIDI12.write(velocityZero);
 			break;
 	}
 	noteStopFunction[channelNoteOff][valueNoteOff] = LOW;
@@ -1704,29 +2313,64 @@ void noteOnVoid(byte valueNoteOn, byte volumeNoteOn, byte channelNoteOn){
 	}
 	switch (channelNoteOn) {
 		case 0:
-			MIDI1.write(noteSendOn);
-			MIDI1.write(valueNoteOn);
-			MIDI1.write(volumeNoteOn);
+			MIDI01.write(noteSendOn);
+			MIDI01.write(valueNoteOn);
+			MIDI01.write(volumeNoteOn);
 			break;
 		case 1:
-			MIDI2.write(noteSendOn);
-			MIDI2.write(valueNoteOn);
-			MIDI2.write(volumeNoteOn);
+			MIDI02.write(noteSendOn);
+			MIDI02.write(valueNoteOn);
+			MIDI02.write(volumeNoteOn);
 			break;
 		case 2:
-			MIDI3.write(noteSendOn);
-			MIDI3.write(valueNoteOn);
-			MIDI3.write(volumeNoteOn);
+			MIDI03.write(noteSendOn);
+			MIDI03.write(valueNoteOn);
+			MIDI03.write(volumeNoteOn);
 			break;
 		case 3:
-			MIDI4.write(noteSendOn);
-			MIDI4.write(valueNoteOn);
-			MIDI4.write(volumeNoteOn);
+			MIDI04.write(noteSendOn);
+			MIDI04.write(valueNoteOn);
+			MIDI04.write(volumeNoteOn);
 			break;
 		case 4:
-			MIDI5.write(noteSendOn);
-			MIDI5.write(valueNoteOn);
-			MIDI5.write(volumeNoteOn);
+			MIDI05.write(noteSendOn);
+			MIDI05.write(valueNoteOn);
+			MIDI05.write(volumeNoteOn);
+			break;
+		case 5:
+			MIDI06.write(noteSendOn);
+			MIDI06.write(valueNoteOn);
+			MIDI06.write(volumeNoteOn);
+			break;
+		case 6:
+			MIDI07.write(noteSendOn);
+			MIDI07.write(valueNoteOn);
+			MIDI07.write(volumeNoteOn);
+			break;
+		case 7:
+			MIDI08.write(noteSendOn);
+			MIDI08.write(valueNoteOn);
+			MIDI08.write(volumeNoteOn);
+			break;
+		case 8:
+			MIDI09.write(noteSendOn);
+			MIDI09.write(valueNoteOn);
+			MIDI09.write(volumeNoteOn);
+			break;
+		case 9:
+			MIDI10.write(noteSendOn);
+			MIDI10.write(valueNoteOn);
+			MIDI10.write(volumeNoteOn);
+			break;
+		case 10:
+			MIDI11.write(noteSendOn);
+			MIDI11.write(valueNoteOn);
+			MIDI11.write(volumeNoteOn);
+			break;
+		case 11:
+			MIDI12.write(noteSendOn);
+			MIDI12.write(valueNoteOn);
+			MIDI12.write(volumeNoteOn);
 			break;
 	}
 	noteStop[channelNoteOn][valueNoteOn] = HIGH;
@@ -1757,25 +2401,76 @@ void stopPlay(){
 		}
 	}
 	for (byte x=0; x<16; x++){
-		steps[x] = -1;
+		steps[x] = tripletStep[noteTriplet[x]];
 		for (byte y=0; y<128; y++){
 			if (noteStop[x][y] == HIGH){
 				noteOffVoid(y,x);
 			}
 		}
+		for (byte y=0; y<8; y++){
+			playLater[x][y] = LOW;
+			playLaterOff[x][y] = LOW;
+			for (int i=0; i<256; i++){
+				startNote[x][i][y] = HIGH;
+			}
+		}
 	}
+	clockCounter = 0;
 	isClock = LOW;
 	clockStart = HIGH;
 	beatClockCounter = 0;
 	for (byte x=0; x<channelCount; x++){
-		pagePlay[x] = 0;
+		pagePlay[x] = 255;
+		mooveInCounter[x] = 0;
 	}
 }
 
-void setAnsichtView(byte x){
+void setPageView1(byte x){
 	for (byte c=0; c<channelCount; c++){
-		if (pageActive[c][x]==HIGH || channelView==c || pageActive[channelView][x]==LOW) {
-			pageView[c] = x;
+		if (pageActive[c][pageView[c]/16*16+x]==HIGH || channelView==c || pageActive[channelView][pageView[c]/16*16+x]==LOW) {
+			pageView[c] = pageView[c]/16*16+x;
+		}
+	}
+	functionView();
+}
+
+void setPageView2(byte x){
+	for (byte c=0; c<channelCount; c++){
+		if (pageActive[c][pageView[c]%16+x]==HIGH || channelView==c || pageActive[channelView][pageView[c]%16+x]==LOW) {
+			pageView[c] = pageView[c]%16+x;
+		}
+	}
+	functionView();
+}
+
+void setPageActive1(byte x){
+	pageActive[channelView][pageView[channelView]/16*16+x] = !pageActive[channelView][pageView[channelView]/16*16+x];
+	functionView();
+}
+
+void setPageActive2(byte x){
+	//if (pageActive[channelView][pageView[channelView]%16+x])
+	if (pageActive[channelView][x]==LOW && 
+		pageActive[channelView][x+1]==LOW && 
+		pageActive[channelView][x+2]==LOW && 
+		pageActive[channelView][x+3]==LOW && 
+		pageActive[channelView][x+4]==LOW && 
+		pageActive[channelView][x+5]==LOW && 
+		pageActive[channelView][x+6]==LOW && 
+		pageActive[channelView][x+7]==LOW && 
+		pageActive[channelView][x+8]==LOW && 
+		pageActive[channelView][x+9]==LOW && 
+		pageActive[channelView][x+10]==LOW && 
+		pageActive[channelView][x+11]==LOW && 
+		pageActive[channelView][x+12]==LOW && 
+		pageActive[channelView][x+13]==LOW && 
+		pageActive[channelView][x+14]==LOW && 
+		pageActive[channelView][x+15]==LOW && 
+		pageActive[channelView][x+16]==LOW){
+		pageActive[channelView][x] = !pageActive[channelView][x];
+	} else {
+		for (byte c=x; c<=x+16; c++){
+			pageActive[channelView][c] = LOW;
 		}
 	}
 	functionView();
@@ -1795,28 +2490,30 @@ void playLiveView(){
 			trellis.setLED(hardwareMatrix[c][15]);
 		}
 		if(c % 2 != 0){ //White Keys
-			trellis.setLED(hardwareMatrix[c][2]);
 			trellis.setLED(hardwareMatrix[c][4]);
+			trellis.setLED(hardwareMatrix[c][5]);
 			trellis.setLED(hardwareMatrix[c][6]);
 			trellis.setLED(hardwareMatrix[c][7]);
-			trellis.setLED(hardwareMatrix[c][9]);
-			if (liveLowerNote[channelView] == 84 && c > 5){
-				trellis.clrLED(hardwareMatrix[c][11]);
-				trellis.clrLED(hardwareMatrix[c][13]);
-			} else {
-				trellis.setLED(hardwareMatrix[c][11]);
-				trellis.setLED(hardwareMatrix[c][13]);
-			}
-		} else { //Black Keys
-			trellis.setLED(hardwareMatrix[c][3]);
-			trellis.setLED(hardwareMatrix[c][5]);
 			trellis.setLED(hardwareMatrix[c][8]);
 			if (liveLowerNote[channelView] == 84 && c > 5){
+				trellis.clrLED(hardwareMatrix[c][9]);
 				trellis.clrLED(hardwareMatrix[c][10]);
-				trellis.clrLED(hardwareMatrix[c][12]);
+				trellis.clrLED(hardwareMatrix[c][11]);
 			} else {
+				trellis.setLED(hardwareMatrix[c][9]);
 				trellis.setLED(hardwareMatrix[c][10]);
-				trellis.setLED(hardwareMatrix[c][12]);
+				trellis.setLED(hardwareMatrix[c][11]);
+			}
+		} else { //Black Keys
+			trellis.setLED(hardwareMatrix[c][5]);
+			trellis.setLED(hardwareMatrix[c][6]);
+			trellis.setLED(hardwareMatrix[c][8]);
+			if (liveLowerNote[channelView] == 84 && c > 5){
+				trellis.clrLED(hardwareMatrix[c][9]);
+				trellis.clrLED(hardwareMatrix[c][10]);
+			} else {
+				trellis.setLED(hardwareMatrix[c][9]);
+				trellis.setLED(hardwareMatrix[c][10]);
 			}
 		}
 	}
@@ -1831,45 +2528,28 @@ void liveRecord(byte liveRecordNote, byte liveRecordVolume){
 	if (freeLiveNotes == HIGH){
 		for (eightRows=0; eightRows<8; eightRows++){
 			if (softwareMatrix[channelView][pagePlay[channelView]][hardwareMatrix[eightRows][steps[channelView]]] == LOW){
-				//noteStart[channelView][pagePlay[channelView]][eightRows][steps[channelView]] = beatClockCounter + noteLength[channelView] - 1) % noteLength[channelView];
 				softwareMatrix[channelView][pagePlay[channelView]][hardwareMatrix[eightRows][steps[channelView]]] = HIGH;
 				notePitch[channelView][pagePlay[channelView]][eightRows][steps[channelView]] = liveRecordNote;
-				volumeValue[channelView][pagePlay[channelView]][eightRows][steps[channelView]] = liveRecordVolume;
-				eightRows = 8;
+				noteVolume[channelView][pagePlay[channelView]][eightRows][steps[channelView]] = liveRecordVolume;
+				break;
 			}
 		}
 	}
 	freeLiveNotes = HIGH;
 }
-/*
-void readMIDI(){
-	do {
-		if (MIDI1.available() > 0){
-			MIDIByte[0] = MIDI1.read();
-			MIDIByte[1] = MIDI1.read();
-			if (MIDIByte[0] >= 128){
-				MIDIByte[2] = MIDI1.read();
-				statusByte = MIDIByte[0];
-				dataByte1 = MIDIByte[1];
-				dataByte2 = MIDIByte[2];
-			} else {
-				dataByte1 = MIDIByte[0];
-				dataByte2 = MIDIByte[1];
-			}
-			if (statusByte >= 144 && statusByte <= 159 && dataByte2 > 0){
-				noteOnVoid(dataByte1, 100, 0);
-				if (isPlay == HIGH && playLiveTest == LOW && playLive == HIGH){
-					liveIsPressed[dataByte1] = HIGH;
-					liveRecord(dataByte1, dataByte2);
+void setChannelActive(byte channel){
+	channelActive[channel] = !channelActive[channel];
+	if (isPlay == HIGH){
+		if (channelActive[channel] == LOW){
+			for (byte y=0; y<128; y++){
+				if (noteStop[channel][y] == HIGH){
+					noteOffVoid(y,channel);
 				}
 			}
-			if ((statusByte >= 128 && statusByte <= 143) || (statusByte >= 144 && statusByte <= 159 && dataByte2 == 0)){
-				noteOffVoid(dataByte1, 0);
-				if (isPlay == HIGH && playLiveTest == LOW && playLive == HIGH){
-					liveIsPressed[dataByte1] = LOW;
-				}
-			}
+		} else if (mooveIn == HIGH) {
+			mooveInChannel[channel] = HIGH;
 		}
 	}
-	while ((MIDI1.available() > 2 && MIDIByte[0] >= 128) || (MIDI1.available() > 1 && MIDIByte[0] < 128));
-}*/
+	functionView();
+}
+					
